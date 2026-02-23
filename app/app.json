@@ -1,0 +1,43 @@
+{
+  "expo": {
+    "name": "AI Reply Assistant",
+    "slug": "ai-reply-assistant",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.aireplyassistant.app"
+    },
+    "android": {
+      "package": "com.aireplyassistant.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "scheme": "ai-reply-assistant",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "967015e8-f985-447b-a3a4-c9b28f8a0146"
+      }
+    },
+    "owner": "bendzalaj"
+  }
+}
