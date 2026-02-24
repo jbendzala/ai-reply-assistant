@@ -1,9 +1,5 @@
 import { create } from 'zustand';
-
-interface Reply {
-  id: string;
-  text: string;
-}
+import { Reply } from '../types';
 
 interface ReplyState {
   capturedText: string | null;
