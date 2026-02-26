@@ -60,7 +60,7 @@ function withBubbleManifest(config) {
           $: {
             'android:name': 'com.aireplyassistant.screencapture.BubbleService',
             'android:exported': 'false',
-            'android:foregroundServiceType': 'specialUse',
+            'android:foregroundServiceType': 'specialUse|mediaProjection',
           },
         });
       }
