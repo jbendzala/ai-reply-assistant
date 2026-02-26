@@ -1,0 +1,8 @@
+{
+  "name": "ai-reply-assistant-monorepo",
+  "private": true,
+  "workspaces": [
+    "app",
+    "modules/screen-capture"
+  ]
+}

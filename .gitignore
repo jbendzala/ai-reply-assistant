@@ -1,6 +1,7 @@
 # dependencies
-app/node_modules/
 node_modules/
+app/node_modules/
+modules/*/node_modules/
 
 # Expo
 app/.expo/

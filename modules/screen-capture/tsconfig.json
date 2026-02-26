@@ -1,0 +1,14 @@
+{
+  "extends": "../../app/tsconfig.json",
+  "compilerOptions": {
+    "outDir": "build",
+    "declaration": true,
+    "declarationDir": "build",
+    "rootDir": "src",
+    "baseUrl": ".",
+    "paths": {
+      "expo-modules-core": ["../../app/node_modules/expo-modules-core"]
+    }
+  },
+  "include": ["src"]
+}

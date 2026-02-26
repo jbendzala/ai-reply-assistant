@@ -1,6 +1,4 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-
-const OPENAI_API_URL = "https://api.openai.com/v1/chat/completions";
+const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 
 const TONE_INSTRUCTIONS: Record<string, string> = {
   casual: "Keep replies casual, relaxed, and conversational.",
@@ -9,6 +7,7 @@ const TONE_INSTRUCTIONS: Record<string, string> = {
 };
 
 Deno.serve(async (req) => {
+  try {
   if (req.method === "OPTIONS") {
     return new Response(null, {
       headers: {
@@ -18,9 +17,9 @@ Deno.serve(async (req) => {
     });
   }
 
-  const openaiKey = Deno.env.get("OPENAI_API_KEY");
-  if (!openaiKey) {
-    return new Response(JSON.stringify({ error: "OpenAI key not configured" }), {
+  const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!anthropicKey) {
+    return new Response(JSON.stringify({ error: "Anthropic key not configured" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });
@@ -37,36 +36,35 @@ Deno.serve(async (req) => {
 
   const toneInstruction = TONE_INSTRUCTIONS[tone] ?? TONE_INSTRUCTIONS.casual;
 
-  const openaiRes = await fetch(OPENAI_API_URL, {
+  const anthropicRes = await fetch(ANTHROPIC_API_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${openaiKey}`,
+      "x-api-key": anthropicKey,
+      "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: "gpt-4o",
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 256,
+      system: `You are a helpful assistant. Given a message or conversation text, suggest 3 short, natural reply options. ${toneInstruction} Return only a JSON array of 3 strings, no other text.`,
       messages: [
-        {
-          role: "system",
-          content: `You are a helpful assistant. Given a message or conversation text, suggest 3 short, natural reply options. ${toneInstruction} Return only a JSON array of 3 strings, no other text.`,
-        },
         { role: "user", content: text },
       ],
-      temperature: 0.7,
     }),
   });
 
-  if (!openaiRes.ok) {
-    const err = await openaiRes.text();
+  if (!anthropicRes.ok) {
+    const err = await anthropicRes.text();
     return new Response(JSON.stringify({ error: err }), {
       status: 502,
       headers: { "Content-Type": "application/json" },
     });
   }
 
-  const data = await openaiRes.json();
-  const content = data.choices[0]?.message?.content ?? "[]";
-  const replies = JSON.parse(content);
+  const data = await anthropicRes.json();
+  const raw = data.content[0]?.text ?? "[]";
+  const jsonStr = raw.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "").trim();
+  const replies = JSON.parse(jsonStr);
 
   return new Response(JSON.stringify({ replies }), {
     headers: {
@@ -74,4 +72,10 @@ Deno.serve(async (req) => {
       "Access-Control-Allow-Origin": "*",
     },
   });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: String(err) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 });

@@ -1,0 +1,17 @@
+{
+  "name": "screen-capture",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "peerDependencies": {
+    "expo": "*",
+    "expo-modules-core": "*",
+    "react-native": "*"
+  },
+  "devDependencies": {
+    "@expo/config-plugins": "^54.0.4"
+  }
+}

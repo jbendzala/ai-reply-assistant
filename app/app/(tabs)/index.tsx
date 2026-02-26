@@ -1,27 +1,67 @@
-import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { AppState, Platform, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as ScreenCapture from 'screen-capture';
 import { PermissionStatusCard } from '../../src/components/PermissionStatusCard';
 import { ReplySheet } from '../../src/components/ReplySheet';
 import { ScanInput } from '../../src/components/ScanInput';
+import { useBubbleEvents } from '../../src/hooks/useBubbleEvents';
+import { useBubblePermissions } from '../../src/hooks/useBubblePermissions';
 import { useReplyFlow } from '../../src/hooks/useReplyFlow';
 import { useReplyStore } from '../../src/store/useReplyStore';
+import { useSettingsStore } from '../../src/store/useSettingsStore';
 import { Colors, Spacing, Typography } from '../../src/utils/theme';
 
 export default function HomeScreen() {
   const { startFlow, isLoading } = useReplyFlow();
   const { suggestions, reset } = useReplyStore();
+  const { tone } = useSettingsStore();
   const [sheetVisible, setSheetVisible] = useState(false);
   const [bubbleEnabled, setBubbleEnabled] = useState(false);
   const [lastInput, setLastInput] = useState('');
 
-  // Open sheet when suggestions arrive
+  // ─── Permissions (no-ops on non-Android internally) ───────────────────
+  const { overlayGranted, requestOverlay, refresh } = useBubblePermissions();
+
+  // Refresh permission state when user comes back from Settings
   useEffect(() => {
-    if (suggestions.length > 0) {
-      setSheetVisible(true);
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') refresh();
+    });
+    return () => sub.remove();
+  }, [refresh]);
+
+  // Persist Supabase config to native so backgrounded OkHttp calls work
+  useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
+    const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
+    if (supabaseUrl && supabaseAnonKey) {
+      ScreenCapture.configureBubbleService({ supabaseUrl, supabaseAnonKey, tone });
+    }
+  }, [tone]);
+
+  // ─── Bubble events (no-ops on non-Android internally) ─────────────────
+  const handleCapturedText = useCallback(
+    (text: string) => {
+      setLastInput(text);
+      startFlow(text);
+    },
+    [startFlow],
+  );
+
+  useBubbleEvents(handleCapturedText);
+
+  // Open sheet when suggestions arrive; also push them to the native overlay
+  useEffect(() => {
+    if (suggestions.length === 0) return;
+    setSheetVisible(true);
+    if (Platform.OS === 'android') {
+      ScreenCapture.sendRepliesToNative(suggestions.map((s) => s.text));
     }
   }, [suggestions]);
 
+  // ─── Handlers ────────────────────────────────────────────────────────────
   function handleScan(text: string) {
     setLastInput(text);
     startFlow(text);
@@ -36,15 +76,20 @@ export default function HomeScreen() {
     if (lastInput) startFlow(lastInput);
   }
 
-  function handleBubbleToggle(value: boolean) {
+  async function handleBubbleToggle(value: boolean) {
+    if (Platform.OS !== 'android') return;
+
     if (value) {
-      Alert.alert(
-        'Coming in Phase 4',
-        'The floating bubble overlay will be available in the next build.',
-        [{ text: 'OK' }],
-      );
+      if (!overlayGranted) {
+        await requestOverlay();
+        return; // Don't enable until permission is confirmed
+      }
+      await ScreenCapture.startBubbleService();
+      setBubbleEnabled(true);
+    } else {
+      await ScreenCapture.stopBubbleService();
+      setBubbleEnabled(false);
     }
-    setBubbleEnabled(false);
   }
 
   return (
@@ -65,17 +110,8 @@ export default function HomeScreen() {
         <Text style={styles.sectionLabel}>PERMISSIONS</Text>
         <PermissionStatusCard
           label="Screen Overlay"
-          status="not_asked"
-          onGrant={() =>
-            Alert.alert('Coming in Phase 4', 'Overlay permission will be requested when the bubble is ready.')
-          }
-        />
-        <PermissionStatusCard
-          label="Screen Capture"
-          status="not_asked"
-          onGrant={() =>
-            Alert.alert('Coming in Phase 4', 'Screen capture permission will be requested when the bubble is ready.')
-          }
+          status={overlayGranted ? 'granted' : 'not_asked'}
+          onGrant={requestOverlay}
         />
 
         {/* Bubble toggle */}
@@ -83,11 +119,14 @@ export default function HomeScreen() {
         <View style={styles.row}>
           <View style={styles.rowInfo}>
             <Text style={styles.rowLabel}>Enable floating bubble</Text>
-            <Text style={styles.rowSub}>Requires overlay permission</Text>
+            <Text style={styles.rowSub}>
+              {overlayGranted ? 'Tap to scan any conversation' : 'Requires overlay permission'}
+            </Text>
           </View>
           <Switch
             value={bubbleEnabled}
             onValueChange={handleBubbleToggle}
+            disabled={Platform.OS !== 'android'}
             trackColor={{ false: Colors.border, true: Colors.accentBlue }}
             thumbColor={Colors.textPrimary}
           />

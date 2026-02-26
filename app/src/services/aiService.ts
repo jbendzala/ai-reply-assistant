@@ -18,8 +18,16 @@ export async function generateReplies(
   });
 
   if (!response.ok) {
-    const err = await response.json().catch(() => ({ error: response.statusText }));
-    throw new Error((err as { error?: string }).error ?? `Request failed: ${response.status}`);
+    const rawText = await response.text();
+    console.error('[aiService] HTTP', response.status, response.statusText, rawText);
+    let errMsg: string;
+    try {
+      const err = JSON.parse(rawText);
+      errMsg = (err as { error?: string }).error ?? `Request failed: ${response.status}`;
+    } catch {
+      errMsg = rawText || `Request failed: ${response.status}`;
+    }
+    throw new Error(errMsg);
   }
 
   const data = await response.json();
