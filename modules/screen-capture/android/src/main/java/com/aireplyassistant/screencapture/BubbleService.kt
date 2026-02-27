@@ -275,8 +275,13 @@ class BubbleService : Service() {
 
   private fun callSupabaseEdgeFunction(text: String) {
     val prefs = getSharedPreferences("BubbleServicePrefs", Context.MODE_PRIVATE)
-    val url = prefs.getString("supabaseUrl", null) ?: return
-    val key = prefs.getString("supabaseAnonKey", null) ?: return
+    val url = prefs.getString("supabaseUrl", null)
+    val key = prefs.getString("supabaseAnonKey", null)
+    if (url.isNullOrEmpty() || key.isNullOrEmpty()) {
+      android.os.Handler(mainLooper).post { hideScanningOverlay() }
+      emitError("Supabase not configured — open the app fully before using the bubble")
+      return
+    }
     val tone = prefs.getString("tone", "casual") ?: "casual"
 
     val json = JSONObject().apply {
