@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { AppState, Platform, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { AppState, Platform, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ScreenCapture from 'screen-capture';
 import { PermissionStatusCard } from '../../src/components/PermissionStatusCard';
@@ -15,7 +15,7 @@ import { Colors, Spacing, Typography } from '../../src/utils/theme';
 export default function HomeScreen() {
   const { startFlow, isLoading } = useReplyFlow();
   const { suggestions, reset } = useReplyStore();
-  const { tone } = useSettingsStore();
+  const { tone, setTone } = useSettingsStore();
   const [sheetVisible, setSheetVisible] = useState(false);
   const [bubbleEnabled, setBubbleEnabled] = useState(false);
   const [lastInput, setLastInput] = useState('');
@@ -132,6 +132,23 @@ export default function HomeScreen() {
           />
         </View>
 
+        {/* Tone selector */}
+        <Text style={styles.sectionLabel}>REPLY TONE</Text>
+        <View style={styles.toneRow}>
+          {(['casual', 'formal', 'friendly', 'witty'] as const).map((t) => (
+            <TouchableOpacity
+              key={t}
+              style={[styles.toneChip, tone === t && styles.toneChipActive]}
+              onPress={() => setTone(t)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.toneChipText, tone === t && styles.toneChipTextActive]}>
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         {/* Test scan */}
         <Text style={styles.sectionLabel}>TEST REPLY GENERATION</Text>
         <ScanInput onSubmit={handleScan} loading={isLoading} />
@@ -197,5 +214,30 @@ const styles = StyleSheet.create({
   rowSub: {
     ...Typography.caption,
     color: Colors.textSecondary,
+  },
+  toneRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  toneChip: {
+    flex: 1,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.xs,
+    backgroundColor: Colors.surface,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    alignItems: 'center',
+  },
+  toneChipActive: {
+    backgroundColor: Colors.accentBlue,
+    borderColor: Colors.accentBlue,
+  },
+  toneChipText: {
+    ...Typography.label,
+    color: Colors.textSecondary,
+  },
+  toneChipTextActive: {
+    color: Colors.textPrimary,
   },
 });

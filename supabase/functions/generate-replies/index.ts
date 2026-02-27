@@ -1,9 +1,10 @@
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 
 const TONE_INSTRUCTIONS: Record<string, string> = {
-  casual: "Keep replies casual, relaxed, and conversational.",
-  formal: "Keep replies professional, polite, and formal.",
-  friendly: "Keep replies warm, upbeat, and friendly.",
+  casual: "Tone: relaxed and natural, like texting a friend. Contractions and brief replies are fine.",
+  formal: "Tone: professional and measured. Use complete sentences, no slang or abbreviations.",
+  friendly: "Tone: warm, upbeat, and personable. Add genuine positive energy where it fits naturally.",
+  witty: "Tone: light and clever. At least one of the 3 replies should have a playful or humorous spin.",
 };
 
 Deno.serve(async (req) => {
@@ -45,8 +46,20 @@ Deno.serve(async (req) => {
     },
     body: JSON.stringify({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 256,
-      system: `You are a helpful assistant. Given a message or conversation text, suggest 3 short, natural reply options. ${toneInstruction} Return only a JSON array of 3 strings, no other text.`,
+      max_tokens: 400,
+      system: `You are a messaging assistant helping someone reply to a conversation on their phone.
+
+The text below was OCR-scanned from their screen — focus on the most recent incoming message.
+
+Rules:
+- Generate exactly 3 reply options
+- Keep each reply under 20 words
+- Make the 3 options meaningfully different from each other (vary length, directness, and angle)
+- Sound like a real person texting — not a bot, not a template
+- Only use emojis if the scanned conversation already uses them
+- Return ONLY a valid JSON array of 3 strings — no explanation, no markdown
+
+${toneInstruction}`,
       messages: [
         { role: "user", content: text },
       ],

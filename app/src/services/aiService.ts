@@ -50,6 +50,11 @@ const MOCK_REPLIES: Record<TonePreference, string[][]> = {
     ["Haha that's so funny!", "That made my day 😄", "You're hilarious!"],
     ["I'd love to!", "Count me in! 🙌", "Let's make it happen!"],
   ],
+  witty: [
+    ["Bold move, I respect it", "Didn't see that coming 👀", "Well played."],
+    ["As one does", "Naturally", "Only took you three days 😄"],
+    ["My body is ready", "I've been preparing for this moment", "Sure, what's the worst that could happen?"],
+  ],
 };
 
 export async function generateRepliesMock(
