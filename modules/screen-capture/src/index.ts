@@ -30,6 +30,19 @@ export async function requestOverlayPermission(): Promise<void> {
 }
 
 /**
+ * Shows the system MediaProjection consent dialog ("Share your screen?") from
+ * the foreground activity context. Returns true if the user accepted, false if
+ * they denied or the dialog could not be shown.
+ *
+ * Note: MediaProjection permission cannot be stored — it must be re-granted
+ * each session. Use this pre-flight check to confirm the user has seen and
+ * accepted the dialog at least once so the bubble flow will work reliably.
+ */
+export async function requestMediaProjectionPermission(): Promise<boolean> {
+  return ScreenCaptureModule?.requestMediaProjectionPermission() ?? false;
+}
+
+/**
  * Starts the BubbleService foreground service, which draws the floating bubble.
  * Requires overlay permission and should only be called after configureBubbleService().
  */

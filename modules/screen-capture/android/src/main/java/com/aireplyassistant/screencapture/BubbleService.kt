@@ -18,6 +18,7 @@ import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.os.IBinder
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.WindowManager
 import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
@@ -159,7 +160,7 @@ class BubbleService : Service() {
     val intent = Intent("com.aireplyassistant.REQUEST_MEDIA_PROJECTION").apply {
       component = ComponentName(packageName, "$packageName.MainActivity")
       putExtra("media_projection_intent", pm.createScreenCaptureIntent())
-      addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+      addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
     }
     startActivity(intent)
   }
@@ -167,7 +168,11 @@ class BubbleService : Service() {
   // ─── Screen capture ───────────────────────────────────────────────────────
 
   private fun startCapture(resultCode: Int, data: Intent?) {
-    if (data == null) return
+    if (data == null) {
+      hideScanningOverlay()
+      emitError("Screen recording permission denied")
+      return
+    }
     val pm = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
     mediaProjection = pm.getMediaProjection(resultCode, data)
 
@@ -283,6 +288,8 @@ class BubbleService : Service() {
       return
     }
     val tone = prefs.getString("tone", "casual") ?: "casual"
+    val accessToken = prefs.getString("accessToken", null)
+    val authToken = if (!accessToken.isNullOrBlank()) accessToken else key
 
     val json = JSONObject().apply {
       put("text", text)
@@ -292,20 +299,28 @@ class BubbleService : Service() {
     val request = Request.Builder()
       .url("$url/functions/v1/generate-replies")
       .post(json.toRequestBody("application/json".toMediaType()))
-      .addHeader("Authorization", "Bearer $key")
+      .addHeader("Authorization", "Bearer $authToken")
       .addHeader("Content-Type", "application/json")
       .build()
 
-    OkHttpClient().newCall(request).enqueue(object : Callback {
+    OkHttpClient.Builder()
+      .connectTimeout(45, java.util.concurrent.TimeUnit.SECONDS)
+      .readTimeout(45, java.util.concurrent.TimeUnit.SECONDS)
+      .writeTimeout(45, java.util.concurrent.TimeUnit.SECONDS)
+      .build()
+      .newCall(request).enqueue(object : Callback {
       override fun onFailure(call: Call, e: IOException) {
+        Log.e("BubbleService", "Network error: ${e.message}")
         android.os.Handler(mainLooper).post { hideScanningOverlay() }
         emitError(e.message ?: "Network error")
       }
 
       override fun onResponse(call: Call, response: Response) {
+        val code = response.code
         if (!response.isSuccessful) {
+          Log.e("BubbleService", "Edge function error: $code")
           android.os.Handler(mainLooper).post { hideScanningOverlay() }
-          emitError("Edge function error: ${response.code}")
+          emitError("Edge function error: $code")
           return
         }
         val body = response.body?.string() ?: return

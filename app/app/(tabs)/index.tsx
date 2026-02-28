@@ -8,6 +8,7 @@ import { ScanInput } from '../../src/components/ScanInput';
 import { useBubbleEvents } from '../../src/hooks/useBubbleEvents';
 import { useBubblePermissions } from '../../src/hooks/useBubblePermissions';
 import { useReplyFlow } from '../../src/hooks/useReplyFlow';
+import { useAuthStore } from '../../src/store/useAuthStore';
 import { useReplyStore } from '../../src/store/useReplyStore';
 import { useSettingsStore } from '../../src/store/useSettingsStore';
 import { Colors, Spacing, Typography } from '../../src/utils/theme';
@@ -16,12 +17,13 @@ export default function HomeScreen() {
   const { startFlow, isLoading } = useReplyFlow();
   const { suggestions, reset } = useReplyStore();
   const { tone, setTone } = useSettingsStore();
+  const session = useAuthStore((s) => s.session);
   const [sheetVisible, setSheetVisible] = useState(false);
   const [bubbleEnabled, setBubbleEnabled] = useState(false);
   const [lastInput, setLastInput] = useState('');
 
   // ─── Permissions (no-ops on non-Android internally) ───────────────────
-  const { overlayGranted, requestOverlay, refresh } = useBubblePermissions();
+  const { overlayGranted, screenRecordingStatus, requestOverlay, requestScreenRecording, refresh } = useBubblePermissions();
 
   // Refresh permission state when user comes back from Settings
   useEffect(() => {
@@ -37,9 +39,14 @@ export default function HomeScreen() {
     const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
     const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '';
     if (supabaseUrl && supabaseAnonKey) {
-      ScreenCapture.configureBubbleService({ supabaseUrl, supabaseAnonKey, tone });
+      ScreenCapture.configureBubbleService({
+        supabaseUrl,
+        supabaseAnonKey,
+        tone,
+        accessToken: session?.access_token ?? '',
+      });
     }
-  }, [tone]);
+  }, [tone, session]);
 
   // ─── Bubble events (no-ops on non-Android internally) ─────────────────
   const handleCapturedText = useCallback(
@@ -112,6 +119,11 @@ export default function HomeScreen() {
           label="Screen Overlay"
           status={overlayGranted ? 'granted' : 'not_asked'}
           onGrant={requestOverlay}
+        />
+        <PermissionStatusCard
+          label="Screen Recording"
+          status={screenRecordingStatus}
+          onGrant={requestScreenRecording}
         />
 
         {/* Bubble toggle */}

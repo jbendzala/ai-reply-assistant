@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../src/components/Button';
-import { useSettingsStore } from '../src/store/useSettingsStore';
+import { useAuthStore } from '../src/store/useAuthStore';
 import { Colors, Radius, Spacing, Typography } from '../src/utils/theme';
 
 const { width } = Dimensions.get('window');
@@ -34,15 +34,16 @@ const PAGES = [
   {
     glyph: '✓',
     title: "You're all set",
-    subtitle: 'Add your OpenAI API key in Settings to get live replies, or use demo mode to try it now.',
+    subtitle: "You're ready to go. Enable the floating bubble from the home screen to start getting AI-powered reply suggestions.",
   },
 ];
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const { completeOnboarding } = useSettingsStore();
+  const { completeOnboarding } = useAuthStore();
   const scrollRef = useRef<ScrollView>(null);
   const [page, setPage] = useState(0);
+  const [completing, setCompleting] = useState(false);
 
   function handleScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
     const newPage = Math.round(e.nativeEvent.contentOffset.x / width);
@@ -55,8 +56,13 @@ export default function OnboardingScreen() {
     }
   }
 
-  function handleGetStarted() {
-    completeOnboarding();
+  async function handleGetStarted() {
+    setCompleting(true);
+    try {
+      await completeOnboarding();
+    } catch (_) {
+      // Continue even if update fails — user can still use the app
+    }
     router.replace('/(tabs)');
   }
 
@@ -106,7 +112,11 @@ export default function OnboardingScreen() {
         {page < PAGES.length - 1 ? (
           <Button label="Next" onPress={handleNext} />
         ) : (
-          <Button label="Get Started" onPress={handleGetStarted} />
+          <Button
+            label={completing ? 'Setting up...' : 'Get Started'}
+            onPress={handleGetStarted}
+            disabled={completing}
+          />
         )}
       </View>
     </SafeAreaView>

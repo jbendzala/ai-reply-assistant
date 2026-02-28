@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import * as ScreenCapture from 'screen-capture';
+import { PermissionStatus } from '../types';
 
 export function useBubblePermissions() {
   const [overlayGranted, setOverlayGranted] = useState(false);
+  const [screenRecordingStatus, setScreenRecordingStatus] = useState<PermissionStatus>('not_asked');
 
   useEffect(() => {
     if (Platform.OS !== 'android') return;
@@ -25,10 +27,16 @@ export function useBubblePermissions() {
     }, 500);
   }
 
+  async function requestScreenRecording() {
+    if (Platform.OS !== 'android') return;
+    const granted = await ScreenCapture.requestMediaProjectionPermission();
+    setScreenRecordingStatus(granted ? 'granted' : 'denied');
+  }
+
   function refresh() {
     if (Platform.OS !== 'android') return;
     ScreenCapture.hasOverlayPermission().then(setOverlayGranted);
   }
 
-  return { overlayGranted, requestOverlay, refresh };
+  return { overlayGranted, screenRecordingStatus, requestOverlay, requestScreenRecording, refresh };
 }

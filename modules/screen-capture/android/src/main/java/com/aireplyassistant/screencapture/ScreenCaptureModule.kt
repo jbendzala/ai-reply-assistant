@@ -1,15 +1,18 @@
 package com.aireplyassistant.screencapture
 
+import android.app.Activity
 import android.app.ActivityManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import expo.modules.kotlin.Promise
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 
@@ -20,6 +23,11 @@ class ScreenCaptureModule : Module() {
 
   private var textReceiver: BroadcastReceiver? = null
   private var errorReceiver: BroadcastReceiver? = null
+  private var pendingProjectionPromise: Promise? = null
+
+  companion object {
+    private const val PREFLIGHT_REQUEST_CODE = 1002
+  }
 
   override fun definition() = ModuleDefinition {
     Name("ScreenCapture")
@@ -66,6 +74,25 @@ class ScreenCaptureModule : Module() {
       context.startActivity(intent)
     }
 
+    // ─── MediaProjection pre-flight permission ────────────────────────────────
+    AsyncFunction("requestMediaProjectionPermission") { promise: Promise ->
+      val activity = appContext.currentActivity ?: run {
+        promise.resolve(false)
+        return@AsyncFunction
+      }
+      val pm = activity.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+      pendingProjectionPromise = promise
+      @Suppress("DEPRECATION")
+      activity.startActivityForResult(pm.createScreenCaptureIntent(), PREFLIGHT_REQUEST_CODE)
+    }
+
+    OnActivityResult { _, result ->
+      if (result.requestCode == PREFLIGHT_REQUEST_CODE) {
+        pendingProjectionPromise?.resolve(result.resultCode == Activity.RESULT_OK)
+        pendingProjectionPromise = null
+      }
+    }
+
     // ─── Bubble service lifecycle ─────────────────────────────────────────────
     AsyncFunction("startBubbleService") {
       val intent = Intent(context, BubbleService::class.java)
@@ -90,6 +117,7 @@ class ScreenCaptureModule : Module() {
         .putString("supabaseUrl", config["supabaseUrl"])
         .putString("supabaseAnonKey", config["supabaseAnonKey"])
         .putString("tone", config["tone"])
+        .putString("accessToken", config["accessToken"])
         .apply()
     }
 

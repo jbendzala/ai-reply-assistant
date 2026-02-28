@@ -1,18 +1,18 @@
 import { TonePreference } from '../types';
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
 const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/generate-replies`;
 
 export async function generateReplies(
   capturedText: string,
   tone: TonePreference,
+  accessToken: string,
 ): Promise<string[]> {
   const response = await fetch(EDGE_FUNCTION_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({ text: capturedText, tone }),
   });

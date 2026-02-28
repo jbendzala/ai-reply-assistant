@@ -14,4 +14,5 @@ export type BubbleServiceConfig = {
   supabaseUrl: string;
   supabaseAnonKey: string;
   tone: string;
+  accessToken: string;
 };

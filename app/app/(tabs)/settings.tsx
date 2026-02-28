@@ -1,6 +1,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useAuthStore } from '../../src/store/useAuthStore';
 import { useSettingsStore } from '../../src/store/useSettingsStore';
 import { TonePreference } from '../../src/types';
 import { Colors, Radius, Spacing, Typography } from '../../src/utils/theme';
@@ -9,10 +10,12 @@ const TONES: { value: TonePreference; label: string; description: string }[] = [
   { value: 'casual', label: 'Casual', description: 'Relaxed and conversational' },
   { value: 'formal', label: 'Formal', description: 'Professional and polished' },
   { value: 'friendly', label: 'Friendly', description: 'Warm and upbeat' },
+  { value: 'witty', label: 'Witty', description: 'Clever and playful' },
 ];
 
 export default function SettingsScreen() {
   const { tone, setTone } = useSettingsStore();
+  const { session, signOut } = useAuthStore();
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -38,6 +41,17 @@ export default function SettingsScreen() {
             {tone === t.value && <Text style={styles.checkmark}>✓</Text>}
           </TouchableOpacity>
         ))}
+
+        <Text style={styles.sectionLabel}>ACCOUNT</Text>
+        <View style={styles.aboutCard}>
+          <AboutRow label="Email" value={session?.user.email ?? '—'} />
+          <View style={styles.divider} />
+          <TouchableOpacity onPress={signOut} activeOpacity={0.75}>
+            <View style={styles.aboutRow}>
+              <Text style={[styles.aboutLabel, { color: Colors.error }]}>Sign Out</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
 
         <Text style={styles.sectionLabel}>ABOUT</Text>
         <View style={styles.aboutCard}>
