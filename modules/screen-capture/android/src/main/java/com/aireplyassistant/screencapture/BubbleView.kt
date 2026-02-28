@@ -1,13 +1,14 @@
 package com.aireplyassistant.screencapture
 
 import android.animation.ObjectAnimator
-import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PixelFormat
+import android.graphics.RadialGradient
+import android.graphics.Shader
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -34,24 +35,26 @@ class BubbleView(
   private val dismissTargetSizePx = (64 * dp).toInt()
   private val snapThresholdPx = 90 * dp
 
-  // ─── Plasma paints ───────────────────────────────────────────────────────
+  // ─── Paints ───────────────────────────────────────────────────────────────
 
   private val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-    color = Color.parseColor("#1E3A8A") // dark navy blue
+    color = Color.parseColor("#060E1F") // near-black navy
   }
-  private val blob1Paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-    color = Color.parseColor("#3B82F6"); alpha = 165
+  private val boltPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    style = Paint.Style.STROKE
+    strokeWidth = 1.6f * dp
+    strokeCap = Paint.Cap.ROUND
+    color = Color.parseColor("#E2F0FF") // near-white icy blue
   }
-  private val blob2Paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-    color = Color.parseColor("#93C5FD"); alpha = 130
+  private val boltGlowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    style = Paint.Style.STROKE
+    strokeWidth = 3.5f * dp
+    strokeCap = Paint.Cap.ROUND
+    color = Color.parseColor("#7DD3FC") // soft blue glow layer
   }
-  private val blob3Paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-    color = Color.parseColor("#DBEAFE"); alpha = 90
-  }
-  private val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-    color = Color.WHITE; alpha = 55
-  }
+  private val corePaint = Paint(Paint.ANTI_ALIAS_FLAG)
   private val clipPath = Path()
+  private val boltPath = Path()
 
   // ─── Touch tracking ───────────────────────────────────────────────────────
 
@@ -68,12 +71,12 @@ class BubbleView(
 
   private var dismissTargetView: DismissTargetView? = null
 
-  // ─── Plasma animation ────────────────────────────────────────────────────
+  // ─── Animation ────────────────────────────────────────────────────────────
 
   private var time = 0f
-  private val plasmaRunnable = object : Runnable {
+  private val animRunnable = object : Runnable {
     override fun run() {
-      time += 0.04f
+      time += 0.045f
       invalidate()
       postDelayed(this, 16)
     }
@@ -82,7 +85,7 @@ class BubbleView(
   init {
     params.width = bubbleSizePx
     params.height = bubbleSizePx
-    post(plasmaRunnable)
+    post(animRunnable)
   }
 
   override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -94,6 +97,7 @@ class BubbleView(
     val cy = height / 2f
     val r = (width / 2f) - 2f
 
+    // Clip to circle
     clipPath.reset()
     clipPath.addCircle(cx, cy, r, Path.Direction.CW)
     canvas.save()
@@ -102,25 +106,56 @@ class BubbleView(
     // Background
     canvas.drawCircle(cx, cy, r, bgPaint)
 
-    // Animated plasma blobs
-    canvas.drawCircle(
-      cx + sin(time * 1.1f) * r * 0.35f,
-      cy + cos(time * 0.9f) * r * 0.30f,
-      r * 0.62f, blob1Paint,
-    )
-    canvas.drawCircle(
-      cx + sin(time * 0.7f + 2.1f) * r * 0.30f,
-      cy + cos(time * 1.3f + 1.0f) * r * 0.40f,
-      r * 0.55f, blob2Paint,
-    )
-    canvas.drawCircle(
-      cx + sin(time * 1.5f + 4.2f) * r * 0.25f,
-      cy + cos(time * 0.8f + 3.0f) * r * 0.35f,
-      r * 0.45f, blob3Paint,
-    )
+    // 13 plasma bolt arms — each fires independently with its own angle and timing.
+    // Bolts randomly appear/fade rather than orbiting at fixed angular positions.
+    for (i in 0 until 13) {
+      // Each bolt has its own slow pulse with a unique frequency — when the
+      // pulse crosses the threshold the bolt is "alive".
+      val pulse = sin(time * (0.9f + i * 0.38f) + i * 2.6f)
+      if (pulse < -0.2f) continue // bolt dormant — skip draw entirely
+      val visibility = ((pulse + 0.2f) / 1.2f).coerceIn(0f, 1f)
 
-    // Central white glow
-    canvas.drawCircle(cx, cy, r * 0.28f, glowPaint)
+      // Angle drifts on a different frequency from visibility, so bolts appear
+      // pointing in a new direction each time they wake up.
+      val angle = (sin(time * 0.35f + i * 1.9f) * Math.PI.toFloat() +
+                   cos(time * 0.25f + i * 2.8f) * Math.PI.toFloat())
+
+      val length = r * visibility * (0.55f + sin(time * 3.1f + i * 0.85f) * 0.22f)
+      val midFrac = 0.45f + sin(time * 2.3f + i * 1.1f) * 0.12f
+      val perpOffset = sin(time * 5.5f + i * 1.9f) * r * 0.18f
+
+      val perpAngle = angle + (Math.PI / 2).toFloat()
+      val midDist = length * midFrac
+      val midX = cx + cos(angle) * midDist + cos(perpAngle) * perpOffset
+      val midY = cy + sin(angle) * midDist + sin(perpAngle) * perpOffset
+      val endX = cx + cos(angle) * length
+      val endY = cy + sin(angle) * length
+
+      boltPath.reset()
+      boltPath.moveTo(cx, cy)
+      boltPath.lineTo(midX, midY)
+      boltPath.lineTo(endX, endY)
+
+      // Glow layer (wider, less opaque) — scales with visibility
+      val glowAlpha = (visibility * 90f).toInt().coerceIn(0, 90)
+      boltGlowPaint.alpha = glowAlpha
+      canvas.drawPath(boltPath, boltGlowPaint)
+
+      // Sharp bright bolt on top
+      val boltAlpha = (visibility * 220f + sin(time * 6f + i * 2.5f) * 30f).toInt().coerceIn(0, 240)
+      boltPaint.alpha = boltAlpha
+      canvas.drawPath(boltPath, boltPaint)
+    }
+
+    // Bright pulsing core — radial gradient white → transparent
+    val coreRadius = r * (0.22f + sin(time * 2.0f) * 0.06f)
+    corePaint.shader = RadialGradient(
+      cx, cy, coreRadius,
+      intArrayOf(Color.WHITE, Color.parseColor("#80BAE6FF"), Color.TRANSPARENT),
+      floatArrayOf(0f, 0.55f, 1f),
+      Shader.TileMode.CLAMP,
+    )
+    canvas.drawCircle(cx, cy, coreRadius, corePaint)
 
     canvas.restore()
   }
@@ -224,25 +259,6 @@ class BubbleView(
     return sqrt((dx * dx + dy * dy).toDouble()) < snapThresholdPx
   }
 
-  // ─── Edge snap ──────────────────────���────────────────────────────────────
-
-  private fun snapToEdge() {
-    val screenWidth = resources.displayMetrics.widthPixels
-    val targetX = if (params.x + bubbleSizePx / 2 > screenWidth / 2)
-      screenWidth - bubbleSizePx - (12 * dp).toInt()
-    else
-      (12 * dp).toInt()
-    ValueAnimator.ofInt(params.x, targetX).apply {
-      addUpdateListener {
-        params.x = it.animatedValue as Int
-        try { windowManager.updateViewLayout(this@BubbleView, params) } catch (_: Exception) {}
-      }
-      duration = 200
-      interpolator = DecelerateInterpolator()
-      start()
-    }
-  }
-
   // ─── Shake hint ──────────────────────────────────────────────────────────
 
   private fun startShake() {
@@ -255,7 +271,7 @@ class BubbleView(
   // ─── Cleanup ─────────────────────────────────────────────────────────────
 
   fun cleanup() {
-    removeCallbacks(plasmaRunnable)
+    removeCallbacks(animRunnable)
     hideDismissTarget()
     longPressRunnable?.let { handler.removeCallbacks(it) }
   }

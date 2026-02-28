@@ -39,8 +39,10 @@ class DismissTargetView(context: Context, private val sizePx: Int) : View(contex
     val cy = height / 2f
     val r = width / 2f - 4f
     canvas.drawCircle(cx, cy, r, if (isActive) bgActivePaint else bgPaint)
+    ringPaint.alpha = if (isActive) 200 else 100
     canvas.drawCircle(cx, cy, r, ringPaint)
     val xLen = r * 0.32f
+    xPaint.strokeWidth = if (isActive) 3.5f * dp else 2.5f * dp
     canvas.drawLine(cx - xLen, cy - xLen, cx + xLen, cy + xLen, xPaint)
     canvas.drawLine(cx + xLen, cy - xLen, cx - xLen, cy + xLen, xPaint)
   }
@@ -48,8 +50,8 @@ class DismissTargetView(context: Context, private val sizePx: Int) : View(contex
   fun setActive(active: Boolean) {
     if (isActive == active) return
     isActive = active
-    val scale = if (active) 1.25f else 1.0f
-    animate().scaleX(scale).scaleY(scale).setDuration(150).start()
+    // No scale — the WindowManager frame is fixed, scaling overflows it.
+    // Active state is communicated through color change (bgActivePaint) alone.
     invalidate()
   }
 

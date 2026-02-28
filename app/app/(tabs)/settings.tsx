@@ -43,37 +43,20 @@ export default function SettingsScreen() {
         ))}
 
         <Text style={styles.sectionLabel}>ACCOUNT</Text>
-        <View style={styles.aboutCard}>
-          <AboutRow label="Email" value={session?.user.email ?? '—'} />
-          <View style={styles.divider} />
-          <TouchableOpacity onPress={signOut} activeOpacity={0.75}>
-            <View style={styles.aboutRow}>
-              <Text style={[styles.aboutLabel, { color: Colors.error }]}>Sign Out</Text>
-            </View>
-          </TouchableOpacity>
+        <View style={styles.accountCard}>
+          <View style={styles.accountRow}>
+            <Text style={styles.accountLabel}>Email</Text>
+            <Text style={styles.accountValue} numberOfLines={1}>
+              {session?.user.email ?? '—'}
+            </Text>
+          </View>
         </View>
 
-        <Text style={styles.sectionLabel}>ABOUT</Text>
-        <View style={styles.aboutCard}>
-          <AboutRow label="Version" value="1.0.0 (Phase 3)" />
-          <View style={styles.divider} />
-          <AboutRow label="AI Replies" value="Powered by our servers" />
-          <View style={styles.divider} />
-          <AboutRow label="Bubble overlay" value="Phase 4" />
-          <View style={styles.divider} />
-          <AboutRow label="iOS extension" value="Phase 5" />
-        </View>
+        <TouchableOpacity style={styles.signOutButton} onPress={signOut} activeOpacity={0.75}>
+          <Text style={styles.signOutText}>Sign Out</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
-  );
-}
-
-function AboutRow({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.aboutRow}>
-      <Text style={styles.aboutLabel}>{label}</Text>
-      <Text style={styles.aboutValue}>{value}</Text>
-    </View>
   );
 }
 
@@ -132,28 +115,42 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
   },
-  aboutCard: {
+  accountCard: {
     backgroundColor: Colors.surface,
     borderRadius: Radius.md,
     borderWidth: 1,
     borderColor: Colors.border,
     paddingHorizontal: Spacing.lg,
   },
-  aboutRow: {
+  accountRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingVertical: Spacing.lg,
+    gap: Spacing.md,
   },
-  aboutLabel: {
+  accountLabel: {
     ...Typography.body,
     color: Colors.textSecondary,
   },
-  aboutValue: {
+  accountValue: {
     ...Typography.body,
     color: Colors.textPrimary,
+    flex: 1,
+    textAlign: 'right',
   },
-  divider: {
-    height: 1,
-    backgroundColor: Colors.border,
+  signOutButton: {
+    marginTop: Spacing.xl,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.error,
+    padding: Spacing.lg,
+    alignItems: 'center',
+  },
+  signOutText: {
+    ...Typography.label,
+    color: Colors.error,
+    fontSize: 15,
   },
 });
