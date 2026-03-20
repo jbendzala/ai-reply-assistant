@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — ReplyGen</title>
+  <meta name="description" content="ReplyGen Privacy Policy — what data we collect, how we use it, and your rights." />
+  <link rel="icon" href="favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0A0A0F;
+      --surface:   #13131A;
+      --surface2:  #1C1C28;
+      --border:    #2A2A3D;
+      --text:      #F0F0FF;
+      --muted:     #8888AA;
+      --dim:       #55556A;
+      --blue:      #4F8EF7;
+      --blue-dim:  #1A2B4B;
+      --radius:    14px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .container { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner {
+      max-width: 1040px; margin: 0 auto; padding: 0 24px;
+      height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 700; font-size: 18px; letter-spacing: -0.3px;
+      color: var(--text); text-decoration: none;
+    }
+    .nav-logo:hover { text-decoration: none; }
+    .nav-logo-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--blue-dim);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .nav-back {
+      font-size: 14px; color: var(--muted);
+      display: flex; align-items: center; gap: 6px;
+      transition: color 0.15s;
+    }
+    .nav-back:hover { color: var(--text); text-decoration: none; }
+
+    /* ── Page ── */
+    .page {
+      max-width: 720px; margin: 0 auto;
+      padding: 72px 24px 96px;
+    }
+
+    .page-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
+      text-transform: uppercase; color: var(--blue);
+      margin-bottom: 12px;
+    }
+
+    .page-title {
+      font-size: clamp(28px, 4vw, 44px); font-weight: 800;
+      letter-spacing: -1px; line-height: 1.15;
+      margin-bottom: 8px;
+    }
+
+    .page-updated {
+      font-size: 14px; color: var(--dim); margin-bottom: 56px;
+    }
+
+    /* ── Policy content ── */
+    .policy h2 {
+      font-size: 20px; font-weight: 700;
+      margin-top: 48px; margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .policy h3 {
+      font-size: 16px; font-weight: 600;
+      margin-top: 28px; margin-bottom: 10px;
+      color: var(--text);
+    }
+
+    .policy p {
+      font-size: 15px; color: var(--muted); line-height: 1.75;
+      margin-bottom: 16px;
+    }
+
+    .policy ul {
+      list-style: none; margin-bottom: 16px;
+    }
+    .policy ul li {
+      font-size: 15px; color: var(--muted); line-height: 1.75;
+      padding: 6px 0; padding-left: 20px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .policy ul li:last-child { border-bottom: none; }
+    .policy ul li::before {
+      content: '–';
+      position: absolute; left: 0; color: var(--blue);
+    }
+    .policy ul li strong { color: var(--text); }
+
+    /* ── Table ── */
+    .policy table {
+      width: 100%; border-collapse: collapse;
+      margin-bottom: 24px; font-size: 14px;
+    }
+    .policy th {
+      text-align: left; padding: 10px 14px;
+      background: var(--surface2); color: var(--text);
+      font-weight: 600; font-size: 13px;
+      border: 1px solid var(--border);
+    }
+    .policy td {
+      padding: 10px 14px; color: var(--muted);
+      border: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .policy td:first-child { color: var(--text); font-weight: 500; white-space: nowrap; }
+
+    /* ── Contact box ── */
+    .contact-box {
+      margin-top: 48px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+    }
+    .contact-box h2 { margin-top: 0; }
+    .contact-box a {
+      display: inline-block; margin-top: 8px;
+      font-size: 15px; font-weight: 600;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 48px 0;
+    }
+    .footer-inner {
+      max-width: 1040px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 16px;
+    }
+    .footer-logo { font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 8px; color: var(--text); }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a { font-size: 14px; color: var(--muted); transition: color 0.15s; text-decoration: none; }
+    .footer-links a:hover { color: var(--text); }
+    .footer-copy { font-size: 13px; color: var(--dim); width: 100%; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <div class="nav-logo-icon">💬</div>
+      ReplyGen
+    </a>
+    <a href="index.html" class="nav-back">← Back to home</a>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="page-label">Legal</div>
+  <h1 class="page-title">Privacy Policy</h1>
+  <div class="page-updated">Last updated: March 18, 2026</div>
+
+  <div class="policy">
+
+    <p>ReplyGen ("the App") helps you generate smart reply suggestions for your conversations. This policy explains what data we collect, how we use it, and your rights.</p>
+
+    <h2>What We Collect</h2>
+
+    <h3>Account data</h3>
+    <ul>
+      <li><strong>Email address</strong> — collected when you create an account or sign in with Google, used solely for authentication.</li>
+      <li><strong>Google account info</strong> (if you use Google Sign-In) — name, email, and profile picture as provided by Google. We do not store this beyond your session.</li>
+    </ul>
+
+    <h3>Usage data</h3>
+    <ul>
+      <li><strong>Scan count</strong> — we record how many times per month you use the scan feature. This is used only to enforce the free tier limit (50 scans/month) and to display your usage in the app.</li>
+    </ul>
+
+    <h2>What We Do NOT Collect</h2>
+    <ul>
+      <li><strong>Screen content</strong> — text captured from your screen is sent to our AI backend for processing and immediately discarded. It is never stored in any database, logged, or associated with your account.</li>
+      <li><strong>Message content</strong> — we do not retain any conversation text, contact names, phone numbers, or any other content from your messages.</li>
+      <li><strong>Location data</strong> — the App does not access or collect your location.</li>
+    </ul>
+
+    <h2>How Data Is Used</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Purpose</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Email address</td>
+          <td>Account authentication</td>
+        </tr>
+        <tr>
+          <td>Scan count</td>
+          <td>Usage metering (free tier enforcement)</td>
+        </tr>
+        <tr>
+          <td>Screen text (transient)</td>
+          <td>AI reply generation — processed and discarded immediately</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>We do not sell, share, or monetize any user data.</p>
+
+    <h2>Third-Party Services</h2>
+    <p>The App uses the following third-party services:</p>
+    <ul>
+      <li><strong>Supabase</strong> — authentication and usage count storage. <a href="https://supabase.com/privacy" target="_blank" rel="noopener">Supabase Privacy Policy</a></li>
+      <li><strong>Anthropic Claude API</strong> — AI processing of screen text to generate reply suggestions. Text is sent to Anthropic's API and is subject to <a href="https://www.anthropic.com/privacy" target="_blank" rel="noopener">Anthropic's Privacy Policy</a>. Text is not retained by Anthropic for training by default.</li>
+      <li><strong>Google Sign-In</strong> — optional authentication method. Subject to <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google's Privacy Policy</a>.</li>
+    </ul>
+
+    <h2>Permissions</h2>
+    <ul>
+      <li><strong>Display over other apps</strong> — required to show the floating bubble overlay on your screen. Used only to display the UI; does not read screen content on its own.</li>
+      <li><strong>Screen capture</strong> — activated only when you explicitly tap the bubble. Used to take a single screenshot for OCR text extraction. The captured image is processed locally into text and immediately discarded; no image is ever stored or transmitted.</li>
+    </ul>
+
+    <h2>Data Storage &amp; Security</h2>
+    <ul>
+      <li>Account and usage data is stored securely on Supabase infrastructure with encryption in transit (HTTPS/TLS).</li>
+      <li>Screen content is never written to disk or any database.</li>
+    </ul>
+
+    <h2>Data Retention &amp; Deletion</h2>
+    <ul>
+      <li>Usage counts are retained on a rolling monthly basis.</li>
+      <li>You may delete your account and all associated data at any time from the app's Settings screen.</li>
+    </ul>
+
+    <h2>Children's Privacy</h2>
+    <p>The App is not directed at children under 13. We do not knowingly collect data from children.</p>
+
+    <h2>Changes to This Policy</h2>
+    <p>We may update this policy from time to time. We will notify you of significant changes by updating the "Last updated" date above.</p>
+
+    <div class="contact-box">
+      <h2>Contact</h2>
+      <p>If you have questions about this privacy policy or your data, contact us at:</p>
+      <a href="mailto:hello@replygen.co">hello@replygen.co</a>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-logo">
+      <div class="nav-logo-icon">💬</div>
+      ReplyGen
+    </div>
+    <div class="footer-links">
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="terms.html">Terms of Use</a>
+      <a href="mailto:hello@replygen.co">Contact</a>
+    </div>
+    <div class="footer-copy">© 2026 ReplyGen · replygen.co</div>
+  </div>
+</footer>
+
+</body>
+</html>
