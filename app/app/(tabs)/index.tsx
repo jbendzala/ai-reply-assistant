@@ -23,7 +23,7 @@ export default function HomeScreen() {
   const [lastInput, setLastInput] = useState('');
 
   // ─── Permissions (no-ops on non-Android internally) ───────────────────
-  const { overlayGranted, screenRecordingStatus, requestOverlay, requestScreenRecording, refresh } = useBubblePermissions();
+  const { overlayGranted, requestOverlay, refresh } = useBubblePermissions();
 
   // Refresh permission state when user comes back from Settings
   useEffect(() => {
@@ -137,11 +137,6 @@ export default function HomeScreen() {
           label="Screen Overlay"
           status={overlayGranted ? 'granted' : 'not_asked'}
           onGrant={requestOverlay}
-        />
-        <PermissionStatusCard
-          label="Screen Recording"
-          status={screenRecordingStatus}
-          onGrant={requestScreenRecording}
         />
 
         {/* Tone selector */}
