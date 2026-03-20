@@ -218,12 +218,44 @@ class MainActivity : ReactActivity() {
 }
 
 /**
+ * Append ProGuard keep rules so R8 doesn't obfuscate the native module
+ * classes in EAS release builds (which would silently break the JS bridge).
+ */
+function withBubbleProguard(config) {
+  return withDangerousMod(config, [
+    'android',
+    (cfg) => {
+      const proguardPath = path.join(
+        cfg.modRequest.platformProjectRoot,
+        'app', 'proguard-rules.pro',
+      );
+      const rules = [
+        '',
+        '# ScreenCapture native module — keep all classes from R8 obfuscation',
+        '-keep class com.aireplyassistant.screencapture.** { *; }',
+        '-keepclassmembers class com.aireplyassistant.screencapture.** { *; }',
+        '',
+      ].join('\n');
+
+      const existing = fs.existsSync(proguardPath)
+        ? fs.readFileSync(proguardPath, 'utf-8')
+        : '';
+      if (!existing.includes('com.aireplyassistant.screencapture')) {
+        fs.appendFileSync(proguardPath, rules, 'utf-8');
+      }
+      return cfg;
+    },
+  ]);
+}
+
+/**
  * Combined plugin
  */
 function withScreenCapture(config) {
   config = withBubbleManifest(config);
   config = withBubbleGradle(config);
   config = withBubbleMainActivity(config);
+  config = withBubbleProguard(config);
   return config;
 }
 
