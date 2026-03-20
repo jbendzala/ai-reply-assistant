@@ -59,6 +59,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "69435432358-6kebc17k0hoq2mupi19ajn37encdvka7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.replygen.app",
+            "certificate_hash": "d83bfa323c6b73b212d19b76916b35d3877c298e"
+          }
+        },
+        {
           "client_id": "69435432358-k0qh7ko5q0bodk4asgqrie45v6tquk72.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
