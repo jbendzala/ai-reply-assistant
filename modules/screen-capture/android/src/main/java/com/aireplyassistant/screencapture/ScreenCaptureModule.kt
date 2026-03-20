@@ -67,11 +67,15 @@ class ScreenCaptureModule : Module() {
     }
 
     AsyncFunction("requestOverlayPermission") {
+      // Use the foreground Activity context — Android 14+ restricts startActivity
+      // from application context even with FLAG_ACTIVITY_NEW_TASK.
+      val activity = appContext.currentActivity
+        ?: throw Exception("No foreground activity to start overlay settings")
       val intent = Intent(
         Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-        Uri.parse("package:${context.packageName}"),
-      ).apply { addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) }
-      context.startActivity(intent)
+        Uri.parse("package:${activity.packageName}"),
+      )
+      activity.startActivity(intent)
     }
 
     // ─── MediaProjection pre-flight permission ────────────────────────────────

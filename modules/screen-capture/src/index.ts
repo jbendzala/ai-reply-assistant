@@ -4,14 +4,18 @@ import type { BubbleServiceConfig, CaptureErrorEvent, CaptureEvent } from './typ
 
 export type { BubbleServiceConfig, CaptureErrorEvent, CaptureEvent };
 
-// Guard for Expo Go / environments where the native module isn't compiled in
+// Guard for Expo Go / environments where the native module isn't compiled in.
+// We detect Expo Go by checking for the __expo_go__ global rather than catching
+// all errors, so real native failures (e.g. ProGuard issues, missing autolinking)
+// surface as visible errors instead of silently returning undefined everywhere.
+const isExpoGo = typeof (globalThis as Record<string, unknown>).__expo_go__ !== 'undefined';
 let ScreenCaptureModule: ReturnType<typeof requireNativeModule> | null = null;
 let emitter: EventEmitter | null = null;
-try {
-  ScreenCaptureModule = requireNativeModule('ScreenCapture');
-  emitter = new EventEmitter(ScreenCaptureModule);
-} catch {
-  console.warn('[ScreenCapture] Native module not available — running in stub mode (Expo Go).');
+if (!isExpoGo) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ScreenCaptureModule = requireNativeModule('ScreenCapture') as any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  emitter = new EventEmitter(ScreenCaptureModule as any);
 }
 
 /**
