@@ -4,10 +4,16 @@ const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const FREE_TIER_LIMIT = 50;
 
 const TONE_INSTRUCTIONS: Record<string, string> = {
-  casual: "Tone: relaxed and natural, like texting a friend. Contractions and brief replies are fine.",
-  formal: "Tone: professional and measured. Use complete sentences, no slang or abbreviations.",
-  friendly: "Tone: warm, upbeat, and personable. Add genuine positive energy where it fits naturally.",
-  witty: "Tone: light and clever. At least one of the 3 replies should have a playful or humorous spin.",
+  casual:
+    "Tone: relaxed and natural, like texting a friend. Contractions and brief replies are fine.",
+  formal:
+    "Tone: professional and measured. Use complete sentences, no slang or abbreviations.",
+  friendly:
+    "Tone: warm and personable, but emotionally intelligent. Read the subtext — if the message is sarcastic, ironic, or playfully teasing, catch it and respond with a knowing, playful edge rather than blind positivity. Friendly doesn't mean oblivious.",
+  witty:
+    "Tone: light and clever. At least one of the 3 replies should have a playful or humorous spin.",
+  flirty:
+    "Tone: playful and subtly flirtatious — charming without being over the top. Use light teasing, warm compliments, or suggestive banter that fits the conversation. Keep it tasteful and context-appropriate; if the conversation is clearly professional or platonic, dial it back to just warm and charming.",
 };
 
 Deno.serve(async (req) => {
@@ -42,9 +48,15 @@ Deno.serve(async (req) => {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
-    const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseUser.auth.getUser();
     if (userError || !user) {
-      console.error("[generate-replies] auth error:", JSON.stringify(userError));
+      console.error(
+        "[generate-replies] auth error:",
+        JSON.stringify(userError)
+      );
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
@@ -57,28 +69,44 @@ Deno.serve(async (req) => {
     });
 
     const now = new Date();
-    const month = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+    const month = `${now.getUTCFullYear()}-${String(
+      now.getUTCMonth() + 1
+    ).padStart(2, "0")}`;
 
-    // Atomically increment the usage count for this user/month
+    // Atomically increment the usage count for this email+month
     const { error: rpcError } = await supabaseAdmin.rpc("increment_usage", {
       p_user_id: user.id,
       p_month: month,
+      p_email: user.email ?? null,
     });
 
     if (rpcError) {
       // Table or RPC may not exist yet — log and continue without blocking
-      console.error("[generate-replies] usage increment error:", JSON.stringify(rpcError));
+      console.error(
+        "[generate-replies] usage increment error:",
+        JSON.stringify(rpcError)
+      );
     }
 
-    // Read current count to enforce limit
-    const { data: usageRow } = await supabaseAdmin
-      .from("usage")
-      .select("count")
-      .eq("user_id", user.id)
-      .eq("month", month)
-      .single();
-
-    const currentCount = (usageRow?.count ?? 0) as number;
+    // Read current count from email-based table (persists across account deletions)
+    let currentCount = 0;
+    if (user.email) {
+      const { data: usageRow } = await supabaseAdmin
+        .from("usage_by_email")
+        .select("count")
+        .eq("email", user.email)
+        .eq("month", month)
+        .single();
+      currentCount = (usageRow?.count ?? 0) as number;
+    } else {
+      const { data: usageRow } = await supabaseAdmin
+        .from("usage")
+        .select("count")
+        .eq("user_id", user.id)
+        .eq("month", month)
+        .single();
+      currentCount = (usageRow?.count ?? 0) as number;
+    }
     if (currentCount > FREE_TIER_LIMIT) {
       return new Response(
         JSON.stringify({
@@ -91,10 +119,13 @@ Deno.serve(async (req) => {
     // ── Anthropic API call ───────────────────────────────────────────────────
     const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
     if (!anthropicKey) {
-      return new Response(JSON.stringify({ error: "Anthropic key not configured" }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Anthropic key not configured" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
 
     const { text, tone = "casual" } = await req.json();
@@ -124,16 +155,17 @@ The text below was OCR-scanned from their screen — focus on the most recent in
 
 Rules:
 - Generate exactly 3 reply options
-- Keep each reply under 20 words
+- Match the length of the incoming message — if it's short (1–2 sentences), keep replies brief (1–10 words); if it's longer or more detailed, replies can be up to 25 words
 - Make the 3 options meaningfully different from each other (vary length, directness, and angle)
 - Sound like a real person texting — not a bot, not a template
+- Mirror the register of the conversation: if the messages are professional or formal, avoid casual slang (fr, tbh, ngl, lol, etc.); if the conversation is casual, natural slang is fine
 - Only use emojis if the scanned conversation already uses them
 - Return ONLY a valid JSON array of 3 strings — no explanation, no markdown
+- Empathy over transaction: when someone shares a problem or feels down, lead with understanding before jumping to solutions. Avoid cold phrasing like "what do you need?" — prefer "how can I help?" or "I'm here if you want to talk"
+- Never assume gender: use gender-neutral language (they/them, "your friend", "that person") unless gender is explicitly stated in the conversation
 
 ${toneInstruction}`,
-        messages: [
-          { role: "user", content: text },
-        ],
+        messages: [{ role: "user", content: text }],
       }),
     });
 
@@ -147,7 +179,10 @@ ${toneInstruction}`,
 
     const data = await anthropicRes.json();
     const raw = data.content[0]?.text ?? "[]";
-    const jsonStr = raw.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "").trim();
+    const jsonStr = raw
+      .replace(/^```(?:json)?\n?/, "")
+      .replace(/\n?```$/, "")
+      .trim();
     const replies = JSON.parse(jsonStr);
 
     return new Response(JSON.stringify({ replies }), {

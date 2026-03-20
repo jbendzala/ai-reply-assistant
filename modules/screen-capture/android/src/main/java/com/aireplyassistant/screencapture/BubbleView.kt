@@ -18,7 +18,6 @@ import android.view.View
 import android.view.WindowManager
 import android.view.animation.DecelerateInterpolator
 import kotlin.math.abs
-import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -38,23 +37,33 @@ class BubbleView(
   // ─── Paints ───────────────────────────────────────────────────────────────
 
   private val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-    color = Color.parseColor("#060E1F") // near-black navy
+    color = Color.parseColor("#0D1B2A") // deep navy
   }
-  private val boltPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+
+  // Bubble outline — visible on dark backgrounds
+  private val outlinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
     style = Paint.Style.STROKE
-    strokeWidth = 1.6f * dp
-    strokeCap = Paint.Cap.ROUND
-    color = Color.parseColor("#E2F0FF") // near-white icy blue
+    strokeWidth = 1.2f * resources.displayMetrics.density
+    color = Color.parseColor("#4A7FA8") // muted steel-blue
   }
-  private val boltGlowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+
+  // Water-drop ripple rings
+  private val ripplePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
     style = Paint.Style.STROKE
-    strokeWidth = 3.5f * dp
-    strokeCap = Paint.Cap.ROUND
-    color = Color.parseColor("#7DD3FC") // soft blue glow layer
+    color = Color.parseColor("#7DD3FC") // soft sky-blue
   }
+
+  // Subtle center glow
   private val corePaint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+  // "AI" label
+  private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+    color = Color.WHITE
+    textAlign = Paint.Align.CENTER
+    isFakeBoldText = true
+  }
+
   private val clipPath = Path()
-  private val boltPath = Path()
 
   // ─── Touch tracking ───────────────────────────────────────────────────────
 
@@ -76,7 +85,7 @@ class BubbleView(
   private var time = 0f
   private val animRunnable = object : Runnable {
     override fun run() {
-      time += 0.045f
+      time += 0.030f
       invalidate()
       postDelayed(this, 16)
     }
@@ -106,56 +115,35 @@ class BubbleView(
     // Background
     canvas.drawCircle(cx, cy, r, bgPaint)
 
-    // 13 plasma bolt arms — each fires independently with its own angle and timing.
-    // Bolts randomly appear/fade rather than orbiting at fixed angular positions.
-    for (i in 0 until 13) {
-      // Each bolt has its own slow pulse with a unique frequency — when the
-      // pulse crosses the threshold the bolt is "alive".
-      val pulse = sin(time * (0.9f + i * 0.38f) + i * 2.6f)
-      if (pulse < -0.2f) continue // bolt dormant — skip draw entirely
-      val visibility = ((pulse + 0.2f) / 1.2f).coerceIn(0f, 1f)
-
-      // Angle drifts on a different frequency from visibility, so bolts appear
-      // pointing in a new direction each time they wake up.
-      val angle = (sin(time * 0.35f + i * 1.9f) * Math.PI.toFloat() +
-                   cos(time * 0.25f + i * 2.8f) * Math.PI.toFloat())
-
-      val length = r * visibility * (0.55f + sin(time * 3.1f + i * 0.85f) * 0.22f)
-      val midFrac = 0.45f + sin(time * 2.3f + i * 1.1f) * 0.12f
-      val perpOffset = sin(time * 5.5f + i * 1.9f) * r * 0.18f
-
-      val perpAngle = angle + (Math.PI / 2).toFloat()
-      val midDist = length * midFrac
-      val midX = cx + cos(angle) * midDist + cos(perpAngle) * perpOffset
-      val midY = cy + sin(angle) * midDist + sin(perpAngle) * perpOffset
-      val endX = cx + cos(angle) * length
-      val endY = cy + sin(angle) * length
-
-      boltPath.reset()
-      boltPath.moveTo(cx, cy)
-      boltPath.lineTo(midX, midY)
-      boltPath.lineTo(endX, endY)
-
-      // Glow layer (wider, less opaque) — scales with visibility
-      val glowAlpha = (visibility * 90f).toInt().coerceIn(0, 90)
-      boltGlowPaint.alpha = glowAlpha
-      canvas.drawPath(boltPath, boltGlowPaint)
-
-      // Sharp bright bolt on top
-      val boltAlpha = (visibility * 220f + sin(time * 6f + i * 2.5f) * 30f).toInt().coerceIn(0, 240)
-      boltPaint.alpha = boltAlpha
-      canvas.drawPath(boltPath, boltPaint)
+    // ── Water-drop ripple rings (2 staggered, slow and faint) ────────────────
+    for (i in 0 until 2) {
+      val phase = ((time * 0.18f + i * 0.5f) % 1f)
+      val radius = r * (0.25f + phase * 0.72f)
+      val alpha = (sin(phase * Math.PI.toFloat()) * 28f).toInt().coerceIn(0, 28)
+      ripplePaint.strokeWidth = 0.9f * dp
+      ripplePaint.alpha = alpha
+      canvas.drawCircle(cx, cy, radius, ripplePaint)
     }
 
-    // Bright pulsing core — radial gradient white → transparent
-    val coreRadius = r * (0.22f + sin(time * 2.0f) * 0.06f)
+    // Subtle pulsing center glow
+    val coreR = r * (0.32f + sin(time * 1.6f) * 0.05f)
     corePaint.shader = RadialGradient(
-      cx, cy, coreRadius,
-      intArrayOf(Color.WHITE, Color.parseColor("#80BAE6FF"), Color.TRANSPARENT),
-      floatArrayOf(0f, 0.55f, 1f),
+      cx, cy, coreR,
+      intArrayOf(Color.parseColor("#30558B"), Color.TRANSPARENT),
+      floatArrayOf(0f, 1f),
       Shader.TileMode.CLAMP,
     )
-    canvas.drawCircle(cx, cy, coreRadius, corePaint)
+    canvas.drawCircle(cx, cy, coreR, corePaint)
+
+    // "AI" label — centred, gently pulsing opacity
+    textPaint.textSize = 15f * dp
+    val labelAlpha = (215 + sin(time * 1.4f) * 25).toInt().coerceIn(190, 240)
+    textPaint.alpha = labelAlpha
+    val textY = cy - (textPaint.descent() + textPaint.ascent()) / 2f
+    canvas.drawText("AI", cx, textY, textPaint)
+
+    // Outline drawn last so it sits on top of all internal layers
+    canvas.drawCircle(cx, cy, r - outlinePaint.strokeWidth / 2f, outlinePaint)
 
     canvas.restore()
   }

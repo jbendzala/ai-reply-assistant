@@ -11,9 +11,9 @@ import android.os.Handler
 import android.os.Looper
 import android.view.View
 import kotlin.math.PI
+import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.sin
-import kotlin.math.cos
 
 class ScanningOverlay(context: Context) : View(context) {
 
@@ -32,20 +32,15 @@ class ScanningOverlay(context: Context) : View(context) {
     color = Color.WHITE
   }
 
-  private val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-    style = Paint.Style.STROKE
-    color = Color.WHITE
-  }
-
   private val corePaint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+  private val wavePath = Path()
 
   private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
     color = Color.WHITE
     textAlign = Paint.Align.CENTER
     letterSpacing = 0.14f
   }
-
-  private val wavePath = Path()
 
   // ─── Animation ────────────────────────────────────────────────────────────
 
@@ -73,30 +68,7 @@ class ScanningOverlay(context: Context) : View(context) {
     // Background
     canvas.drawRect(0f, 0f, w, h, bgPaint)
 
-    // ── 6 sonar rings expanding from center to screen edges ─────────────────
-    // Each ring starts small and grows to fill the screen, then fades out.
-    // Staggered so there are always 2-3 visible rings in flight.
-    val numRings = 6
-    for (i in 0 until numRings) {
-      val phase = ((time * 0.35f + i * (1f / numRings)) % 1f)
-      // Expand from a small inner radius (0.08 × maxR) out to the screen edge
-      val radius = maxR * (0.08f + phase * 0.92f)
-      // Fade out as they reach the edge; bright in the middle of their travel
-      val alpha = (sin(phase * PI.toFloat()) * 210f).toInt().coerceIn(0, 210)
-
-      // Glow halo (wider stroke, lower opacity)
-      glowPaint.strokeWidth = 10f * dp
-      glowPaint.alpha = (alpha * 0.30f).toInt()
-      canvas.drawCircle(cx, cy, radius, glowPaint)
-
-      // Sharp bright ring
-      ringPaint.strokeWidth = 1.8f * dp
-      ringPaint.alpha = alpha
-      canvas.drawCircle(cx, cy, radius, ringPaint)
-    }
-
     // ── Wavy energy band — traces a wobbling circle at mid-screen radius ─────
-    // Gives a "breathing membrane" feel over the expanding rings.
     val waveR = maxR * (0.38f + sin(time * 1.0f) * 0.06f)
     for (wave in 0..1) {
       val phaseOffset = wave * PI.toFloat()
@@ -136,7 +108,8 @@ class ScanningOverlay(context: Context) : View(context) {
     val labelAlpha = (190 + sin(time * 1.6f) * 50).toInt().coerceIn(140, 240)
     textPaint.textSize = 16f * dp
     textPaint.alpha = labelAlpha
-    canvas.drawText("Scanning…", cx, cy + maxR * 0.68f, textPaint)
+    val textY = cy - (textPaint.descent() + textPaint.ascent()) / 2f
+    canvas.drawText("Scanning…", cx, textY, textPaint)
   }
 
   fun stop() {

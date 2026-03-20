@@ -4,5 +4,12 @@
   "workspaces": [
     "app",
     "modules/screen-capture"
-  ]
+  ],
+  "version": "1.0.0",
+  "scripts": {},
+  "dependencies": {
+    "expo": "~55.0.4",
+    "react": "19.2.0",
+    "react-native": "0.83.2"
+  }
 }

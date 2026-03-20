@@ -100,7 +100,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['top', 'bottom', 'left', 'right']}>
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.content}
@@ -109,22 +109,9 @@ export default function HomeScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>AI Reply Assistant</Text>
+          <Text style={styles.title}>ReplyGen</Text>
           <Text style={styles.subtitle}>Your smart reply companion</Text>
         </View>
-
-        {/* Permissions */}
-        <Text style={styles.sectionLabel}>PERMISSIONS</Text>
-        <PermissionStatusCard
-          label="Screen Overlay"
-          status={overlayGranted ? 'granted' : 'not_asked'}
-          onGrant={requestOverlay}
-        />
-        <PermissionStatusCard
-          label="Screen Recording"
-          status={screenRecordingStatus}
-          onGrant={requestScreenRecording}
-        />
 
         {/* Bubble toggle */}
         <Text style={styles.sectionLabel}>BUBBLE OVERLAY</Text>
@@ -144,10 +131,23 @@ export default function HomeScreen() {
           />
         </View>
 
+        {/* Permissions */}
+        <Text style={styles.sectionLabel}>PERMISSIONS</Text>
+        <PermissionStatusCard
+          label="Screen Overlay"
+          status={overlayGranted ? 'granted' : 'not_asked'}
+          onGrant={requestOverlay}
+        />
+        <PermissionStatusCard
+          label="Screen Recording"
+          status={screenRecordingStatus}
+          onGrant={requestScreenRecording}
+        />
+
         {/* Tone selector */}
         <Text style={styles.sectionLabel}>REPLY TONE</Text>
         <View style={styles.toneRow}>
-          {(['casual', 'formal', 'friendly', 'witty'] as const).map((t) => (
+          {(['casual', 'formal', 'friendly', 'witty', 'flirty'] as const).map((t) => (
             <TouchableOpacity
               key={t}
               style={[styles.toneChip, tone === t && styles.toneChipActive]}
@@ -161,8 +161,7 @@ export default function HomeScreen() {
           ))}
         </View>
 
-        {/* Test scan */}
-        <Text style={styles.sectionLabel}>TEST REPLY GENERATION</Text>
+        {/* Scan input */}
         <ScanInput onSubmit={handleScan} loading={isLoading} />
       </ScrollView>
 
@@ -184,12 +183,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: Spacing.lg,
+    padding: Spacing.md,
+    paddingTop: Spacing.sm,
     paddingBottom: Spacing.xxxl,
-    gap: Spacing.md,
+    gap: Spacing.sm,
   },
   header: {
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.sm,
     gap: Spacing.xs,
   },
   title: {
@@ -203,8 +203,8 @@ const styles = StyleSheet.create({
   sectionLabel: {
     ...Typography.label,
     color: Colors.textDisabled,
-    marginTop: Spacing.md,
-    marginBottom: Spacing.xs,
+    marginTop: Spacing.sm,
+    marginBottom: 2,
     letterSpacing: 0.8,
   },
   row: {
@@ -229,11 +229,12 @@ const styles = StyleSheet.create({
   },
   toneRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: Spacing.sm,
   },
   toneChip: {
-    flex: 1,
-    paddingVertical: Spacing.sm,
+    width: '31%',
+    paddingVertical: 5,
     paddingHorizontal: Spacing.xs,
     backgroundColor: Colors.surface,
     borderRadius: 10,

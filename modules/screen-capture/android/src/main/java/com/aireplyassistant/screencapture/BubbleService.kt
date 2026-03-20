@@ -23,6 +23,7 @@ import android.view.WindowManager
 import androidx.core.app.NotificationCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import com.google.mlkit.vision.common.InputImage
+import com.google.mlkit.vision.text.Text
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import okhttp3.Call
@@ -53,6 +54,11 @@ class BubbleService : Service() {
   private var mediaProjection: MediaProjection? = null
   private var virtualDisplay: VirtualDisplay? = null
   private var imageReader: ImageReader? = null
+
+  private val capturedSegments = mutableListOf<String>()
+  private var lastReplies: List<String>? = null
+  private val captureHandler = android.os.Handler(android.os.Looper.getMainLooper())
+  private var captureTimeoutRunnable: Runnable? = null
 
   // Receives reply list from ScreenCaptureModule.sendRepliesToNative()
   private val showRepliesReceiver = object : BroadcastReceiver() {
@@ -119,9 +125,7 @@ class BubbleService : Service() {
       try { windowManager.removeView(it) } catch (_: Exception) {}
     }
     overlayWindow?.dismiss()
-    mediaProjection?.stop()
-    virtualDisplay?.release()
-    imageReader?.close()
+    stopCapture()
   }
 
   override fun onTaskRemoved(rootIntent: Intent?) {
@@ -156,9 +160,14 @@ class BubbleService : Service() {
 
   private fun onBubbleTapped() {
     val pm = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-    // Use ComponentName so we don't need to import MainActivity directly
+    // Resolve MainActivity dynamically so it works for both local debug and EAS builds
+    // (applicationId can differ from the Kotlin source package between the two)
+    val mainActivityClass = packageManager
+      .getLaunchIntentForPackage(packageName)
+      ?.component?.className
+      ?: "$packageName.MainActivity"
     val intent = Intent("com.aireplyassistant.REQUEST_MEDIA_PROJECTION").apply {
-      component = ComponentName(packageName, "$packageName.MainActivity")
+      component = ComponentName(packageName, mainActivityClass)
       putExtra("media_projection_intent", pm.createScreenCaptureIntent())
       addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
     }
@@ -215,6 +224,8 @@ class BubbleService : Service() {
   private fun grabFrame() {
     val image: Image? = imageReader?.acquireLatestImage()
     if (image == null) {
+      hideScanningOverlay()
+      stopCapture()
       emitError("Failed to acquire screen image")
       return
     }
@@ -250,24 +261,26 @@ class BubbleService : Service() {
     recognizer.process(inputImage)
       .addOnSuccessListener { visionText ->
         bitmap.recycle()
-        val text = visionText.text.trim()
-        if (text.isNotEmpty()) {
-          onTextExtracted(text) // overlay stays alive through the network call
-        } else {
+        val structured = buildConversationText(visionText.textBlocks, width)
+        if (structured.isNotEmpty()) {
+          capturedSegments.add(0, structured)
+          onTextExtracted(capturedSegments.joinToString("\n\n"))
+          scheduleCaptureTineout()
+        } else if (capturedSegments.isEmpty()) {
           hideScanningOverlay()
+          stopCapture()
           emitError("No text found on screen")
+        } else {
+          // Additional scan found nothing new — re-show last replies
+          hideScanningOverlay()
+          lastReplies?.let { showOverlayWithReplies(it) }
         }
-        mediaProjection?.stop()
-        virtualDisplay?.release()
-        imageReader?.close()
       }
       .addOnFailureListener { e ->
         bitmap.recycle()
         hideScanningOverlay()
         emitError(e.message ?: "OCR failed")
-        mediaProjection?.stop()
-        virtualDisplay?.release()
-        imageReader?.close()
+        stopCapture()
       }
   }
 
@@ -323,8 +336,18 @@ class BubbleService : Service() {
           emitError("Edge function error: $code")
           return
         }
-        val body = response.body?.string() ?: return
-        val repliesArray = JSONObject(body).optJSONArray("replies") ?: return
+        val body = response.body?.string()
+        if (body == null) {
+          android.os.Handler(mainLooper).post { hideScanningOverlay() }
+          emitError("Empty response from server")
+          return
+        }
+        val repliesArray = JSONObject(body).optJSONArray("replies")
+        if (repliesArray == null) {
+          android.os.Handler(mainLooper).post { hideScanningOverlay() }
+          emitError("Invalid response format")
+          return
+        }
         val replies = ArrayList<String>()
         for (i in 0 until repliesArray.length()) {
           replies.add(repliesArray.getString(i))
@@ -366,11 +389,70 @@ class BubbleService : Service() {
   }
 
   private fun showOverlayWithReplies(replies: List<String>) {
-    overlayWindow?.dismiss()
-    overlayWindow = OverlayWindow(this, windowManager, replies) {
-      overlayWindow = null
-    }
+    lastReplies = replies
+    overlayWindow?.dismiss(notify = false)
+    overlayWindow = OverlayWindow(
+      context = this,
+      windowManager = windowManager,
+      replies = replies,
+      onDismiss = {
+        overlayWindow = null
+        capturedSegments.clear()
+        lastReplies = null
+        stopCapture()
+      },
+      onScanMore = {
+        overlayWindow = null
+        showScanningOverlay()
+        android.os.Handler(mainLooper).postDelayed({ grabFrame() }, 400)
+      },
+    )
     overlayWindow!!.show()
+  }
+
+  // ─── Conversation text extraction ─────────────────────────────────────────
+
+  // Classify each ML Kit TextBlock as "Me", "Them", or unlabelled (system/timestamp)
+  // by comparing its horizontal centre to the screen width.
+  // Chat apps consistently right-align sent messages and left-align received ones.
+  private fun buildConversationText(blocks: List<Text.TextBlock>, screenWidth: Int): String {
+    data class Line(val y: Int, val text: String)
+    val lines = mutableListOf<Line>()
+    for (block in blocks) {
+      val box = block.boundingBox ?: continue
+      val blockText = block.text.trim()
+      if (blockText.isEmpty()) continue
+      val centerX = (box.left + box.right) / 2f
+      val label = when {
+        centerX < screenWidth * 0.42f -> "Them"
+        centerX > screenWidth * 0.58f -> "Me"
+        else -> null
+      }
+      val labeled = if (label != null) "$label: $blockText" else blockText
+      lines.add(Line(box.top, labeled))
+    }
+    return lines.sortedBy { it.y }.joinToString("\n") { it.text }
+  }
+
+  // ─── Capture lifecycle ────────────────────────────────────────────────────
+
+  private fun stopCapture() {
+    captureTimeoutRunnable?.let { captureHandler.removeCallbacks(it) }
+    captureTimeoutRunnable = null
+    mediaProjection?.stop()
+    virtualDisplay?.release()
+    imageReader?.close()
+    virtualDisplay = null
+    imageReader = null
+    mediaProjection = null
+  }
+
+  // Keep VirtualDisplay alive for 2 minutes so "Scan more" can grab additional frames.
+  private fun scheduleCaptureTineout() {
+    captureTimeoutRunnable?.let { captureHandler.removeCallbacks(it) }
+    captureTimeoutRunnable = Runnable { stopCapture() }.also {
+      captureHandler.postDelayed(it, 120_000L)
+    }
   }
 
   private fun emitError(message: String) {

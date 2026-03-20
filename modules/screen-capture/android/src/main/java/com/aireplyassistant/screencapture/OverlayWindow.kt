@@ -19,6 +19,7 @@ class OverlayWindow(
   private val windowManager: WindowManager,
   private val replies: List<String>,
   private val onDismiss: () -> Unit,
+  private val onScanMore: () -> Unit,
 ) {
 
   private var rootView: View? = null
@@ -45,7 +46,7 @@ class OverlayWindow(
     }
 
     val title = TextView(context).apply {
-      text = "AI Reply Suggestions"
+      text = "ReplyGen"
       textSize = 14f
       setTextColor(Color.parseColor("#8888AA"))
       layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
@@ -70,6 +71,52 @@ class OverlayWindow(
         LinearLayout.LayoutParams.MATCH_PARENT, dp(1),
       ).apply { setMargins(0, dp(8), 0, dp(8)) }
     })
+
+    // ── Scan more ──
+    val scanMoreContainer = LinearLayout(context).apply {
+      orientation = LinearLayout.VERTICAL
+      layoutParams = LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT,
+        LinearLayout.LayoutParams.WRAP_CONTENT,
+      ).apply { setMargins(0, 0, 0, dp(12)) }
+    }
+
+    val scanMoreBtn = TextView(context).apply {
+      text = "📷  Scan more context"
+      textSize = 13f
+      setTextColor(Color.parseColor("#4F8EF7"))
+      gravity = Gravity.CENTER
+      setPadding(dp(12), dp(10), dp(12), dp(10))
+      background = GradientDrawable().apply {
+        setColor(Color.parseColor("#1A1A2E"))
+        cornerRadius = dp(8).toFloat()
+        setStroke(dp(1), Color.parseColor("#2A2A3D"))
+      }
+      layoutParams = LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT,
+        LinearLayout.LayoutParams.WRAP_CONTENT,
+      )
+      setOnClickListener {
+        this@OverlayWindow.dismiss(notify = false)
+        onScanMore()
+      }
+    }
+
+    val scanMoreHint = TextView(context).apply {
+      text = "Scroll in your chat first, then tap"
+      textSize = 11f
+      setTextColor(Color.parseColor("#55556A"))
+      gravity = Gravity.CENTER
+      setPadding(0, dp(5), 0, 0)
+      layoutParams = LinearLayout.LayoutParams(
+        LinearLayout.LayoutParams.MATCH_PARENT,
+        LinearLayout.LayoutParams.WRAP_CONTENT,
+      )
+    }
+
+    scanMoreContainer.addView(scanMoreBtn)
+    scanMoreContainer.addView(scanMoreHint)
+    card.addView(scanMoreContainer)
 
     // ── Reply rows ──
     replies.forEach { replyText ->
@@ -140,11 +187,11 @@ class OverlayWindow(
     card.startAnimation(anim)
   }
 
-  fun dismiss() {
+  fun dismiss(notify: Boolean = true) {
     rootView?.let {
       try { windowManager.removeView(it) } catch (_: Exception) {}
       rootView = null
     }
-    onDismiss()
+    if (notify) onDismiss()
   }
 }

@@ -24,8 +24,11 @@ export default function AuthScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
 
-  const { signIn, signUp, signInWithGoogle } = useAuthStore();
+  const { signIn, signUp, signInWithGoogle, resetPassword } = useAuthStore();
 
   async function handleSubmit() {
     setLocalError('');
@@ -50,6 +53,24 @@ export default function AuthScreen() {
       }
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleForgotPassword() {
+    setLocalError('');
+    if (!email.trim()) {
+      setLocalError('Enter your email above first.');
+      return;
+    }
+    setForgotLoading(true);
+    try {
+      await resetPassword(email.trim());
+      setForgotSent(true);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to send reset email.';
+      setLocalError(message);
+    } finally {
+      setForgotLoading(false);
     }
   }
 
@@ -86,7 +107,7 @@ export default function AuthScreen() {
         >
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>AI Reply Assistant</Text>
+            <Text style={styles.title}>ReplyGen</Text>
             <Text style={styles.subtitle}>
               {mode === 'signIn' ? 'Sign in to your account' : 'Create an account'}
             </Text>
@@ -135,6 +156,20 @@ export default function AuthScreen() {
                 </TouchableOpacity>
               </View>
             </View>
+
+            {mode === 'signIn' && (
+              <View style={styles.forgotRow}>
+                {forgotSent ? (
+                  <Text style={styles.forgotSent}>✓ Reset email sent — check your inbox</Text>
+                ) : (
+                  <TouchableOpacity onPress={handleForgotPassword} disabled={forgotLoading} activeOpacity={0.7}>
+                    <Text style={styles.forgotLink}>
+                      {forgotLoading ? 'Sending…' : 'Forgot password?'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            )}
 
             {localError ? <Text style={styles.errorText}>{localError}</Text> : null}
 
@@ -275,6 +310,17 @@ const styles = StyleSheet.create({
   },
   eyeButton: {
     padding: Spacing.lg,
+  },
+  forgotRow: {
+    alignItems: 'flex-end',
+  },
+  forgotLink: {
+    ...Typography.caption,
+    color: Colors.accentBlue,
+  },
+  forgotSent: {
+    ...Typography.caption,
+    color: '#22C55E',
   },
   errorText: {
     ...Typography.caption,

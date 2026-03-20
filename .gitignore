@@ -40,5 +40,7 @@ yarn-error.*
 # generated native folders (EAS managed)
 app/ios
 app/android
+android/
+app.json
 
 # EAS secrets

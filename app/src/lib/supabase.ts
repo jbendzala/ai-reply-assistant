@@ -10,5 +10,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    // Using implicit flow (default). The password-reset email carries tokens
+    // directly in the URL hash (#access_token=...&type=recovery) which our
+    // handleResetUrl helper parses and passes to setSession().
   },
 });

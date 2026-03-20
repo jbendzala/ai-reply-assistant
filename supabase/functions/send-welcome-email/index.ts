@@ -1,0 +1,157 @@
+const RESEND_API_URL = "https://api.resend.com/emails";
+const FROM = "ReplyGen <hello@replygen.co>";
+
+const html = (email: string) => `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Welcome to ReplyGen</title>
+</head>
+<body style="margin:0;padding:0;background:#0A0A0F;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#0A0A0F;padding:48px 16px;">
+    <tr><td align="center">
+      <table width="100%" style="max-width:520px;background:#13131A;border-radius:16px;overflow:hidden;border:1px solid #2A2A3D;" cellpadding="0" cellspacing="0" role="presentation">
+
+        <!-- Header -->
+        <tr><td style="padding:40px 40px 32px;text-align:center;">
+          <div style="display:inline-block;width:64px;height:64px;background:#0D1B4B;border-radius:14px;line-height:64px;font-size:32px;margin-bottom:24px;">💬</div>
+          <h1 style="color:#F0F0FF;font-size:24px;font-weight:700;margin:0 0 10px;letter-spacing:-0.3px;">Welcome to ReplyGen 👋</h1>
+          <p style="color:#8888AA;font-size:15px;line-height:1.65;margin:0;">
+            Smart replies, instantly — right from a floating bubble on your screen.
+          </p>
+        </td></tr>
+
+        <!-- Divider -->
+        <tr><td style="padding:0 40px;"><div style="height:1px;background:#2A2A3D;"></div></td></tr>
+
+        <!-- Steps -->
+        <tr><td style="padding:32px 40px;">
+          <p style="color:#55556A;font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;margin:0 0 20px;">Get started in 3 steps</p>
+
+          <!-- Step 1 -->
+          <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:16px;">
+            <tr>
+              <td style="width:40px;height:40px;background:#1C1C28;border-radius:10px;text-align:center;vertical-align:middle;font-size:18px;" valign="middle">👆</td>
+              <td style="padding-left:14px;color:#C8C8E8;font-size:14px;line-height:1.55;" valign="middle">
+                Enable the <strong style="color:#F0F0FF;">floating bubble</strong> from the app, then open any chat app
+              </td>
+            </tr>
+          </table>
+
+          <!-- Step 2 -->
+          <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:16px;">
+            <tr>
+              <td style="width:40px;height:40px;background:#1C1C28;border-radius:10px;text-align:center;vertical-align:middle;font-size:18px;" valign="middle">🧠</td>
+              <td style="padding-left:14px;color:#C8C8E8;font-size:14px;line-height:1.55;" valign="middle">
+                Tap the bubble — AI reads the conversation and <strong style="color:#F0F0FF;">labels who said what</strong>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Step 3 -->
+          <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+            <tr>
+              <td style="width:40px;height:40px;background:#1C1C28;border-radius:10px;text-align:center;vertical-align:middle;font-size:18px;" valign="middle">📋</td>
+              <td style="padding-left:14px;color:#C8C8E8;font-size:14px;line-height:1.55;" valign="middle">
+                Tap <strong style="color:#F0F0FF;">Copy</strong> to paste instantly, or <strong style="color:#F0F0FF;">Scan more</strong> for older context
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+
+        <!-- Tip banner -->
+        <tr><td style="padding:0 40px 32px;">
+          <div style="background:#0D1B4B;border-radius:10px;padding:16px 18px;border-left:3px solid #4F8EF7;">
+            <p style="color:#8ABAFF;font-size:13px;font-weight:600;margin:0 0 4px;">💡 Pro tip</p>
+            <p style="color:#8888AA;font-size:13px;line-height:1.55;margin:0;">
+              Scroll up in your chat to load older messages, then tap <strong style="color:#C8C8E8;">Scan more</strong> — ReplyGen builds up context from multiple screenshots for smarter replies.
+            </p>
+          </div>
+        </td></tr>
+
+        <!-- Divider -->
+        <tr><td style="padding:0 40px;"><div style="height:1px;background:#2A2A3D;"></div></td></tr>
+
+        <!-- Footer -->
+        <tr><td style="padding:24px 40px 32px;text-align:center;">
+          <p style="color:#55556A;font-size:13px;line-height:1.6;margin:0 0 6px;">
+            Questions or feedback? Reply to this email — we read every one.
+          </p>
+          <p style="color:#3A3A50;font-size:12px;margin:0;">© 2026 ReplyGen · You're receiving this because you signed up at replygen.co</p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+Deno.serve(async (req) => {
+  // Allow the DB trigger (service role) and skip OPTIONS pre-flight
+  if (req.method === "OPTIONS") {
+    return new Response(null, {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "authorization, content-type",
+      },
+    });
+  }
+
+  try {
+    const resendKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendKey) {
+      console.error("[send-welcome-email] RESEND_API_KEY not set");
+      return new Response(
+        JSON.stringify({ error: "Email service not configured" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    const { email } = await req.json();
+    if (!email) {
+      return new Response(JSON.stringify({ error: "email is required" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const res = await fetch(RESEND_API_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${resendKey}`,
+      },
+      body: JSON.stringify({
+        from: FROM,
+        to: [email],
+        subject: "Welcome to ReplyGen 👋",
+        html: html(email),
+      }),
+    });
+
+    if (!res.ok) {
+      const body = await res.text();
+      console.error("[send-welcome-email] Resend error:", body);
+      return new Response(JSON.stringify({ error: "Failed to send email" }), {
+        status: 502,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    const data = await res.json();
+    console.log("[send-welcome-email] sent to", email, "id:", data.id);
+    return new Response(JSON.stringify({ ok: true }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    console.error("[send-welcome-email] unhandled error:", err);
+    return new Response(JSON.stringify({ error: String(err) }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+});

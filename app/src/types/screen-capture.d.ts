@@ -5,12 +5,14 @@ declare module 'screen-capture' {
     supabaseUrl: string;
     supabaseAnonKey: string;
     tone: string;
+    accessToken: string;
   };
 
   export type Subscription = { remove: () => void };
 
   export function hasOverlayPermission(): Promise<boolean>;
   export function requestOverlayPermission(): Promise<void>;
+  export function requestMediaProjectionPermission(): Promise<boolean>;
   export function startBubbleService(): Promise<void>;
   export function stopBubbleService(): Promise<void>;
   export function isBubbleRunning(): Promise<boolean>;

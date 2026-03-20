@@ -5,7 +5,7 @@ import { useAuthStore } from '../src/store/useAuthStore';
 import { Colors } from '../src/utils/theme';
 
 export default function RootLayout() {
-  const { session, isInitializing, initialize } = useAuthStore();
+  const { session, isInitializing, initialize, isPasswordRecovery } = useAuthStore();
 
   useEffect(() => {
     initialize();
@@ -21,10 +21,12 @@ export default function RootLayout() {
       <StatusBar style="light" />
       {/* 1. Not logged in → auth */}
       {!session && <Redirect href="/auth" />}
-      {/* 2. Logged in but onboarding not done → onboarding */}
-      {!!session && !onboardingComplete && <Redirect href="/onboarding" />}
-      {/* 3. Logged in + onboarding done → home */}
-      {!!session && onboardingComplete && <Redirect href="/(tabs)" />}
+      {/* 2. Password recovery deep link → reset password screen */}
+      {!!session && isPasswordRecovery && <Redirect href="/reset-password" />}
+      {/* 3. Logged in but onboarding not done → onboarding */}
+      {!!session && !isPasswordRecovery && !onboardingComplete && <Redirect href="/onboarding" />}
+      {/* 4. Logged in + onboarding done → home */}
+      {!!session && !isPasswordRecovery && onboardingComplete && <Redirect href="/(tabs)" />}
       <Stack
         screenOptions={{
           headerShown: false,
@@ -34,6 +36,7 @@ export default function RootLayout() {
       >
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="auth" />
+        <Stack.Screen name="reset-password" />
         <Stack.Screen name="(tabs)" />
       </Stack>
     </>

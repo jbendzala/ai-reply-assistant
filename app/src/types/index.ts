@@ -1,4 +1,4 @@
-export type TonePreference = 'casual' | 'formal' | 'friendly' | 'witty';
+export type TonePreference = 'casual' | 'formal' | 'friendly' | 'witty' | 'flirty';
 
 export interface Reply {
   id: string;
