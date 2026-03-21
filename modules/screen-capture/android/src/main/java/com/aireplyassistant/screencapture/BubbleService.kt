@@ -59,6 +59,9 @@ class BubbleService : Service() {
   private var lastReplies: List<String>? = null
   private val captureHandler = android.os.Handler(android.os.Looper.getMainLooper())
   private var captureTimeoutRunnable: Runnable? = null
+  // True when a bubble tap triggered the re-request so we grab a frame after grant.
+  // False on the initial service-start request (just set up VD, wait for first tap).
+  private var captureAfterGrant = false
 
   // Receives reply list from ScreenCaptureModule.sendRepliesToNative()
   private val showRepliesReceiver = object : BroadcastReceiver() {
@@ -83,8 +86,12 @@ class BubbleService : Service() {
           android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION,
         )
       }
-      showScanningOverlay()
-      startCapture(resultCode, data)
+      val shouldCapture = captureAfterGrant
+      captureAfterGrant = false
+      // Only show scanning overlay + grab frame when user tapped the bubble.
+      // On initial service start we just set up the VirtualDisplay and wait.
+      if (shouldCapture) showScanningOverlay()
+      startCapture(resultCode, data, grabImmediately = shouldCapture)
     }
   }
 
@@ -99,6 +106,11 @@ class BubbleService : Service() {
 
     windowManager = getSystemService(WINDOW_SERVICE) as WindowManager
     showBubble()
+
+    // Request MediaProjection immediately so the VirtualDisplay is ready
+    // before the user taps the bubble — subsequent taps capture with no dialog.
+    captureAfterGrant = false
+    requestMediaProjectionViaMainActivity()
 
     val lbm = LocalBroadcastManager.getInstance(this)
     lbm.registerReceiver(showRepliesReceiver, IntentFilter(ACTION_SHOW_REPLIES))
@@ -158,7 +170,7 @@ class BubbleService : Service() {
     stopSelf()
   }
 
-  private fun onBubbleTapped() {
+  private fun requestMediaProjectionViaMainActivity() {
     val pm = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
     // Resolve MainActivity dynamically so it works for both local debug and EAS builds
     // (applicationId can differ from the Kotlin source package between the two)
@@ -174,12 +186,33 @@ class BubbleService : Service() {
     startActivity(intent)
   }
 
+  private fun onBubbleTapped() {
+    if (virtualDisplay != null && imageReader != null) {
+      // VirtualDisplay is already alive — capture immediately with no dialog
+      capturedSegments.clear()
+      lastReplies = null
+      overlayWindow?.dismiss(notify = false)
+      overlayWindow = null
+      showScanningOverlay()
+      scheduleCaptureTineout() // reset the 120-second keep-alive timer
+      android.os.Handler(mainLooper).postDelayed({ grabFrame() }, 400)
+    } else {
+      // VirtualDisplay is dead (expired or first tap after denial) — re-request permission
+      captureAfterGrant = true
+      requestMediaProjectionViaMainActivity()
+    }
+  }
+
   // ─── Screen capture ───────────────────────────────────────────────────────
 
-  private fun startCapture(resultCode: Int, data: Intent?) {
+  private fun startCapture(resultCode: Int, data: Intent?, grabImmediately: Boolean = true) {
     if (data == null) {
-      hideScanningOverlay()
-      emitError("Screen recording permission denied")
+      if (grabImmediately) {
+        hideScanningOverlay()
+        emitError("Screen recording permission denied")
+      }
+      // If this was the silent setup on service start, just do nothing —
+      // the bubble is still visible and the user can tap to retry.
       return
     }
     val pm = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
@@ -218,7 +251,12 @@ class BubbleService : Service() {
       null,
     )
 
-    android.os.Handler(mainLooper).postDelayed({ grabFrame() }, 1200)
+    if (grabImmediately) {
+      android.os.Handler(mainLooper).postDelayed({ grabFrame() }, 1200)
+    } else {
+      // VD is now warm and ready — start the keep-alive timer and wait for a tap
+      scheduleCaptureTineout()
+    }
   }
 
   private fun grabFrame() {
@@ -399,7 +437,8 @@ class BubbleService : Service() {
         overlayWindow = null
         capturedSegments.clear()
         lastReplies = null
-        stopCapture()
+        // Keep VirtualDisplay alive so the next bubble tap captures instantly.
+        // The 120-second timeout in scheduleCaptureTineout() will clean it up.
       },
       onScanMore = {
         overlayWindow = null

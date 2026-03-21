@@ -40,4 +40,11 @@ config.resolver.resolveRequest = (context, moduleName, platform) => {
   return context.resolveRequest(context, moduleName, platform);
 };
 
+// expo-font is nested under app/node_modules/expo/node_modules/expo-font.
+// When @expo/vector-icons (hoisted to root node_modules) imports expo-font,
+// Metro can't find it via normal hierarchical lookup. Point it explicitly.
+config.resolver.extraNodeModules = {
+  'expo-font': path.resolve(projectRoot, 'node_modules/expo/node_modules/expo-font'),
+};
+
 module.exports = config;
