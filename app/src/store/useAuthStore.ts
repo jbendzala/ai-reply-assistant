@@ -125,6 +125,18 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) throw error;
     set({ session: data.session });
+    // Fire-and-forget — don't block or throw if the email fails
+    fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/send-welcome-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '',
+        'Authorization': `Bearer ${process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? ''}`,
+      },
+      body: JSON.stringify({ email }),
+    })
+      .then((r) => r.json())
+      .catch(() => {});
   },
 
   signIn: async (email, password) => {
@@ -154,11 +166,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       idToken = tokens.idToken;
     }
     if (!idToken) throw new Error('No ID token returned from Google');
-    const { error } = await supabase.auth.signInWithIdToken({
+    const { data, error } = await supabase.auth.signInWithIdToken({
       provider: 'google',
       token: idToken,
     });
     if (error) throw error;
+    // Send welcome email only on first-ever sign-in (new user)
+    if (data.user) {
+      const createdAt = new Date(data.user.created_at).getTime();
+      const isNewUser = Date.now() - createdAt < 10_000;
+      if (isNewUser) {
+        fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/send-welcome-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '',
+            'Authorization': `Bearer ${process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? ''}`,
+          },
+          body: JSON.stringify({ email: data.user.email }),
+        })
+          .then((r) => r.json())
+          .catch(() => {});
+      }
+    }
     // Session will be set via onAuthStateChange listener
   },
 

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Delete Account — ReplyGen</title>
+  <meta name="description" content="How to delete your ReplyGen account and what data is removed." />
+  <link rel="icon" href="favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0A0A0F;
+      --surface:   #13131A;
+      --surface2:  #1C1C28;
+      --border:    #2A2A3D;
+      --text:      #F0F0FF;
+      --muted:     #8888AA;
+      --dim:       #55556A;
+      --blue:      #4F8EF7;
+      --blue-dim:  #1A2B4B;
+      --radius:    14px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .wrap {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 64px 24px 96px;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 48px;
+    }
+    .nav a {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .nav span { color: var(--dim); font-size: 14px; }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+    .updated {
+      color: var(--dim);
+      font-size: 14px;
+      margin-bottom: 48px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+
+    .card h2 {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    .card p {
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .card p:last-child { margin-bottom: 0; }
+
+    .steps {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .steps li {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      color: var(--muted);
+    }
+    .step-num {
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+
+    .highlight {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 8px;
+    }
+    .data-table th {
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--dim);
+      padding: 0 0 10px;
+    }
+    .data-table td {
+      color: var(--muted);
+      font-size: 15px;
+      padding: 8px 0;
+      border-top: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .data-table td:first-child { color: var(--text); width: 45%; }
+
+    .badge-del {
+      display: inline-block;
+      background: rgba(248,113,113,0.12);
+      color: #f87171;
+      border: 1px solid rgba(248,113,113,0.3);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+    }
+    .badge-keep {
+      display: inline-block;
+      background: rgba(79,142,247,0.1);
+      color: var(--blue);
+      border: 1px solid rgba(79,142,247,0.25);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+    }
+
+    .contact-box {
+      background: var(--blue-dim);
+      border: 1px solid rgba(79,142,247,0.2);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .contact-box p { color: var(--muted); font-size: 15px; margin: 0; }
+    .contact-box a { font-weight: 600; }
+
+    footer {
+      text-align: center;
+      color: var(--dim);
+      font-size: 13px;
+      margin-top: 64px;
+    }
+    footer a { color: var(--dim); }
+    footer a:hover { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+
+    <nav class="nav">
+      <a href="/">ReplyGen</a>
+      <span>/</span>
+      <span>Delete Account</span>
+    </nav>
+
+    <h1>Delete Your Account</h1>
+    <p class="updated">Last updated: March 2026</p>
+
+    <!-- How to delete -->
+    <div class="card">
+      <h2>How to delete your account</h2>
+      <p>You can delete your account directly from the ReplyGen app in a few taps:</p>
+      <ul class="steps">
+        <li>
+          <div class="step-num">1</div>
+          <div>Open the <span class="highlight">ReplyGen</span> app on your Android device</div>
+        </li>
+        <li>
+          <div class="step-num">2</div>
+          <div>Tap the <span class="highlight">Settings</span> tab at the bottom of the screen</div>
+        </li>
+        <li>
+          <div class="step-num">3</div>
+          <div>Scroll down and tap <span class="highlight">Delete Account</span></div>
+        </li>
+        <li>
+          <div class="step-num">4</div>
+          <div>Confirm the deletion — your account and all associated data will be removed immediately</div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- What gets deleted -->
+    <div class="card">
+      <h2>What data is deleted</h2>
+      <p>When you delete your account the following data is permanently removed:</p>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Email address &amp; account credentials</td>
+            <td><span class="badge-del">Deleted immediately</span></td>
+          </tr>
+          <tr>
+            <td>Monthly usage count</td>
+            <td><span class="badge-del">Deleted immediately</span></td>
+          </tr>
+          <tr>
+            <td>Tone &amp; settings preferences</td>
+            <td><span class="badge-del">Deleted immediately</span></td>
+          </tr>
+          <tr>
+            <td>Screenshots &amp; scanned text</td>
+            <td><span class="badge-keep">Never stored</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="margin-top:16px;">Screenshots and conversation text are processed in real time and are <strong style="color:var(--text)">never stored</strong> on our servers at any point.</p>
+    </div>
+
+    <!-- Alternative -->
+    <div class="contact-box">
+      <div>
+        <p>Can't access the app? Email us at <a href="mailto:hello@replygen.co">hello@replygen.co</a> and we'll delete your account within 30 days.</p>
+      </div>
+    </div>
+
+    <footer>
+      <p>&copy; 2026 ReplyGen &nbsp;·&nbsp; <a href="/privacy.html">Privacy Policy</a> &nbsp;·&nbsp; <a href="/">Home</a></p>
+    </footer>
+
+  </div>
+</body>
+</html>

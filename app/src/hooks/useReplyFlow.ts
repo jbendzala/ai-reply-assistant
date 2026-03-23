@@ -15,21 +15,16 @@ export function useReplyFlow() {
   const session = useAuthStore((s) => s.session);
 
   async function startFlow(text: string) {
-    console.log("[ReplyFlow] startFlow called with:", text);
-
     reset();
     setCapturedText(text);
     setLoading(true);
 
     try {
       const accessToken = session?.access_token;
-      console.log("[ReplyFlow] SUPABASE_CONFIGURED:", SUPABASE_CONFIGURED, "hasToken:", !!accessToken);
 
       const rawReplies = SUPABASE_CONFIGURED && accessToken
         ? await generateReplies(text, tone, accessToken)
         : await generateRepliesMock(text, tone);
-
-      console.log("[ReplyFlow] rawReplies:", rawReplies);
 
       const replies: Reply[] = rawReplies.map((r, i) => ({
         id: String(i),

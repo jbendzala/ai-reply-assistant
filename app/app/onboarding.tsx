@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -25,24 +26,24 @@ const { width } = Dimensions.get('window');
 const ALL_PAGES = [
   {
     id: 'welcome',
-    emoji: '',
+    ionIcon: null,
     title: 'ReplyGen',
     subtitle:
       'A floating bubble that lives on your screen, ready to suggest the perfect reply — instantly.',
   },
   {
     id: 'how',
-    emoji: '💬',
+    ionIcon: 'chatbubble-ellipses-outline',
     title: 'How it works',
     steps: [
-      { icon: '👆', text: 'Tap the floating bubble above any chat' },
-      { icon: '🧠', text: 'AI reads the conversation and labels who said what' },
-      { icon: '📋', text: 'Copy a reply — or tap Scan more for older context' },
+      { ionIcon: 'finger-print-outline', text: 'Tap the floating bubble above any chat' },
+      { ionIcon: 'sparkles-outline', text: 'AI reads the conversation and labels who said what' },
+      { ionIcon: 'copy-outline', text: 'Copy a reply — or tap Scan more for older context' },
     ],
   },
   {
     id: 'permission',
-    emoji: '🔒',
+    ionIcon: 'lock-closed-outline',
     title: 'One permission needed',
     subtitle:
       'The bubble needs to appear over other apps. No screen content is ever stored — everything is processed and discarded in real time.',
@@ -50,7 +51,7 @@ const ALL_PAGES = [
   },
   {
     id: 'done',
-    emoji: '✅',
+    ionIcon: 'checkmark-circle-outline',
     title: "You're all set",
     subtitle: 'Choose a reply tone to match your style.',
   },
@@ -59,12 +60,12 @@ const ALL_PAGES = [
 // Permission page only shown on Android — iOS handles overlay differently
 const PAGES = ALL_PAGES.filter((p: any) => !p.androidOnly || Platform.OS === 'android');
 
-const TONES: { value: TonePreference; label: string; desc: string }[] = [
+const TONES: { value: TonePreference; label: string; desc: string; pro?: boolean }[] = [
   { value: 'casual',   label: 'Casual',   desc: 'Relaxed, everyday' },
   { value: 'friendly', label: 'Friendly', desc: 'Warm & approachable' },
   { value: 'formal',   label: 'Formal',   desc: 'Professional & polished' },
-  { value: 'witty',    label: 'Witty',    desc: 'Clever & playful' },
-  { value: 'flirty',   label: 'Flirty',   desc: 'Charming & playful' },
+  { value: 'witty',    label: 'Witty',    desc: 'Clever & playful',   pro: true },
+  { value: 'flirty',   label: 'Flirty',   desc: 'Charming & playful', pro: true },
 ];
 
 export default function OnboardingScreen() {
@@ -141,12 +142,12 @@ export default function OnboardingScreen() {
                 <Image
                   source={require('../assets/icon.png')}
                   style={styles.logoImage}
-                  resizeMode="cover"
+                  resizeMode="contain"
                 />
               </View>
             ) : (
-              <View style={[styles.emojiCircle, p.id === 'done' && styles.emojiCircleDone]}>
-                <Text style={styles.emoji}>{p.emoji}</Text>
+              <View style={styles.iconCircle}>
+                <Ionicons name={p.ionIcon as any} size={48} color={Colors.accentBlue} />
               </View>
             )}
 
@@ -160,7 +161,7 @@ export default function OnboardingScreen() {
                 {p.steps.map((step: any, j: number) => (
                   <View key={j} style={styles.step}>
                     <View style={styles.stepIcon}>
-                      <Text style={styles.stepEmoji}>{step.icon}</Text>
+                      <Ionicons name={step.ionIcon as any} size={22} color={Colors.accentBlue} />
                     </View>
                     <Text style={styles.stepText}>{step.text}</Text>
                   </View>
@@ -172,9 +173,11 @@ export default function OnboardingScreen() {
             {p.id === 'permission' && (
               <View style={styles.permissionBox}>
                 <View style={styles.permissionRow}>
-                  <Text style={styles.permissionIcon}>
-                    {overlayGranted ? '✅' : '🔒'}
-                  </Text>
+                  <Ionicons
+                    name={overlayGranted ? 'checkmark-circle-outline' : 'lock-closed-outline'}
+                    size={22}
+                    color={overlayGranted ? Colors.success : Colors.accentBlue}
+                  />
                   <View style={styles.permissionInfo}>
                     <Text style={styles.permissionLabel}>Display over other apps</Text>
                     <Text style={styles.permissionDesc}>
@@ -203,24 +206,33 @@ export default function OnboardingScreen() {
             {/* Tone picker — done page */}
             {p.id === 'done' && (
               <View style={styles.toneGrid}>
-                {TONES.map(({ value, label, desc }) => (
+                {TONES.map(({ value, label, desc, pro }) => (
                   <TouchableOpacity
                     key={value}
                     style={[
                       styles.toneCard,
                       selectedTone === value && styles.toneCardSelected,
+                      pro && styles.toneCardLocked,
                     ]}
-                    onPress={() => setSelectedTone(value)}
-                    activeOpacity={0.7}
+                    onPress={pro ? undefined : () => setSelectedTone(value)}
+                    activeOpacity={pro ? 1 : 0.7}
                   >
-                    <Text
-                      style={[
-                        styles.toneLabel,
-                        selectedTone === value && styles.toneLabelSelected,
-                      ]}
-                    >
-                      {label}
-                    </Text>
+                    <View style={styles.toneLabelRow}>
+                      <Text
+                        style={[
+                          styles.toneLabel,
+                          selectedTone === value && styles.toneLabelSelected,
+                          pro && styles.toneLabelLocked,
+                        ]}
+                      >
+                        {label}
+                      </Text>
+                      {pro && (
+                        <View style={styles.toneLockBadge}>
+                          <Text style={styles.toneLockBadgeText}>PRO</Text>
+                        </View>
+                      )}
+                    </View>
                     <Text style={styles.toneDesc}>{desc}</Text>
                   </TouchableOpacity>
                 ))}
@@ -291,13 +303,12 @@ const styles = StyleSheet.create({
     width: 110,
     height: 110,
     borderRadius: Radius.pill,
-    overflow: 'hidden',
   },
   logoImage: {
     width: 110,
     height: 110,
   },
-  emojiCircle: {
+  iconCircle: {
     width: 100,
     height: 100,
     borderRadius: Radius.pill,
@@ -306,13 +317,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.accentBlue,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  emojiCircleDone: {
-    borderColor: Colors.success,
-    backgroundColor: 'rgba(52,211,153,0.1)',
-  },
-  emoji: {
-    fontSize: 42,
   },
 
   // ── Text ─────────────────────────────────────────────────────────────────
@@ -348,9 +352,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepEmoji: {
-    fontSize: 20,
-  },
   stepText: {
     ...Typography.body,
     color: Colors.textPrimary,
@@ -370,11 +371,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
-  },
-  permissionIcon: {
-    fontSize: 22,
-    width: 28,
-    textAlign: 'center',
   },
   permissionInfo: {
     flex: 1,
@@ -429,6 +425,14 @@ const styles = StyleSheet.create({
     borderColor: Colors.accentBlue,
     backgroundColor: 'rgba(79,142,247,0.08)',
   },
+  toneCardLocked: {
+    opacity: 0.55,
+  },
+  toneLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   toneLabel: {
     ...Typography.label,
     color: Colors.textSecondary,
@@ -436,6 +440,23 @@ const styles = StyleSheet.create({
   },
   toneLabelSelected: {
     color: Colors.accentBlue,
+  },
+  toneLabelLocked: {
+    color: Colors.textDisabled,
+  },
+  toneLockBadge: {
+    backgroundColor: 'rgba(79,142,247,0.15)',
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderWidth: 1,
+    borderColor: 'rgba(79,142,247,0.3)',
+  },
+  toneLockBadgeText: {
+    fontSize: 9,
+    fontWeight: '700' as const,
+    color: Colors.accentBlue,
+    letterSpacing: 0.5,
   },
   toneDesc: {
     ...Typography.caption,

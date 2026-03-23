@@ -2,6 +2,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
 const FREE_TIER_LIMIT = 50;
+const BODY_SIZE_LIMIT = 8_000; // bytes — stops giant OCR payloads from inflating input tokens
+const BURST_INTERVAL_SECONDS = 3; // minimum seconds between scans per user
 
 const TONE_INSTRUCTIONS: Record<string, string> = {
   casual:
@@ -24,6 +26,16 @@ Deno.serve(async (req) => {
           "Access-Control-Allow-Origin": "*",
           "Access-Control-Allow-Headers": "authorization, content-type",
         },
+      });
+    }
+
+    // ── Body size guard ──────────────────────────────────────────────────────
+    // Read the raw body once upfront so we can both size-check and parse it.
+    const rawBody = await req.text();
+    if (rawBody.length > BODY_SIZE_LIMIT) {
+      return new Response(JSON.stringify({ error: "Request body too large" }), {
+        status: 413,
+        headers: { "Content-Type": "application/json" },
       });
     }
 
@@ -63,7 +75,27 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── Usage metering ───────────────────────────────────────────────────────
+    // ── Parse + validate body ────────────────────────────────────────────────
+    let text: string, tone: string;
+    try {
+      const body = JSON.parse(rawBody);
+      text = body.text ?? "";
+      tone = body.tone ?? "casual";
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+    if (!text?.trim()) {
+      return new Response(JSON.stringify({ error: "text is required" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Usage check (before incrementing) ───────────────────────────────────
+    // Checking first ensures we never charge a blocked request against the quota.
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { persistSession: false },
     });
@@ -73,7 +105,51 @@ Deno.serve(async (req) => {
       now.getUTCMonth() + 1
     ).padStart(2, "0")}`;
 
-    // Atomically increment the usage count for this email+month
+    // Burst check: reject if the user scanned less than BURST_INTERVAL_SECONDS ago.
+    const { data: usageRow } = await supabaseAdmin
+      .from("usage")
+      .select("count, last_scan_at")
+      .eq("user_id", user.id)
+      .eq("month", month)
+      .maybeSingle();
+
+    if (usageRow?.last_scan_at) {
+      const secondsSinceLast =
+        (Date.now() - new Date(usageRow.last_scan_at).getTime()) / 1_000;
+      if (secondsSinceLast < BURST_INTERVAL_SECONDS) {
+        return new Response(
+          JSON.stringify({
+            error: "Too many requests. Wait a moment before scanning again.",
+          }),
+          { status: 429, headers: { "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // Monthly limit check (email-based count persists across account deletions).
+    let currentCount = 0;
+    if (user.email) {
+      const { data: emailRow } = await supabaseAdmin
+        .from("usage_by_email")
+        .select("count")
+        .eq("email", user.email)
+        .eq("month", month)
+        .maybeSingle();
+      currentCount = (emailRow?.count ?? 0) as number;
+    } else {
+      currentCount = (usageRow?.count ?? 0) as number;
+    }
+
+    if (currentCount >= FREE_TIER_LIMIT) {
+      return new Response(
+        JSON.stringify({
+          error: `Monthly scan limit of ${FREE_TIER_LIMIT} reached. Upgrade for unlimited scans.`,
+        }),
+        { status: 429, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // ── Increment usage ──────────────────────────────────────────────────────
     const { error: rpcError } = await supabaseAdmin.rpc("increment_usage", {
       p_user_id: user.id,
       p_month: month,
@@ -88,34 +164,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Read current count from email-based table (persists across account deletions)
-    let currentCount = 0;
-    if (user.email) {
-      const { data: usageRow } = await supabaseAdmin
-        .from("usage_by_email")
-        .select("count")
-        .eq("email", user.email)
-        .eq("month", month)
-        .single();
-      currentCount = (usageRow?.count ?? 0) as number;
-    } else {
-      const { data: usageRow } = await supabaseAdmin
-        .from("usage")
-        .select("count")
-        .eq("user_id", user.id)
-        .eq("month", month)
-        .single();
-      currentCount = (usageRow?.count ?? 0) as number;
-    }
-    if (currentCount > FREE_TIER_LIMIT) {
-      return new Response(
-        JSON.stringify({
-          error: `Monthly scan limit of ${FREE_TIER_LIMIT} reached. Upgrade for unlimited scans.`,
-        }),
-        { status: 429, headers: { "Content-Type": "application/json" } }
-      );
-    }
-
     // ── Anthropic API call ───────────────────────────────────────────────────
     const anthropicKey = Deno.env.get("ANTHROPIC_API_KEY");
     if (!anthropicKey) {
@@ -126,15 +174,6 @@ Deno.serve(async (req) => {
           headers: { "Content-Type": "application/json" },
         }
       );
-    }
-
-    const { text, tone = "casual" } = await req.json();
-
-    if (!text?.trim()) {
-      return new Response(JSON.stringify({ error: "text is required" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
     }
 
     const toneInstruction = TONE_INSTRUCTIONS[tone] ?? TONE_INSTRUCTIONS.casual;

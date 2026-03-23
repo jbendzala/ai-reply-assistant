@@ -368,13 +368,19 @@ class BubbleService : Service() {
 
       override fun onResponse(call: Call, response: Response) {
         val code = response.code
+        // Read body once — needed for both error parsing and success parsing
+        val body = response.body?.string()
         if (!response.isSuccessful) {
-          Log.e("BubbleService", "Edge function error: $code")
-          android.os.Handler(mainLooper).post { hideScanningOverlay() }
-          emitError("Edge function error: $code")
+          Log.e("BubbleService", "Edge function error: $code body=$body")
+          val errorMsg = try {
+            body?.let { org.json.JSONObject(it).optString("error").takeIf { s -> s.isNotBlank() } }
+          } catch (_: Exception) { null } ?: "Something went wrong. Please try again."
+          android.os.Handler(mainLooper).post {
+            hideScanningOverlay()
+            android.widget.Toast.makeText(applicationContext, errorMsg, android.widget.Toast.LENGTH_LONG).show()
+          }
           return
         }
-        val body = response.body?.string()
         if (body == null) {
           android.os.Handler(mainLooper).post { hideScanningOverlay() }
           emitError("Empty response from server")

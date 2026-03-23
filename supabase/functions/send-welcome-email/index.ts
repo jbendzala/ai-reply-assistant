@@ -1,3 +1,5 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
 const RESEND_API_URL = "https://api.resend.com/emails";
 const FROM = "ReplyGen <hello@replygen.co>";
 
@@ -15,8 +17,10 @@ const html = (email: string) => `<!DOCTYPE html>
 
         <!-- Header -->
         <tr><td style="padding:40px 40px 32px;text-align:center;">
-          <div style="display:inline-block;width:64px;height:64px;background:#0D1B4B;border-radius:14px;line-height:64px;font-size:32px;margin-bottom:24px;">💬</div>
-          <h1 style="color:#F0F0FF;font-size:24px;font-weight:700;margin:0 0 10px;letter-spacing:-0.3px;">Welcome to ReplyGen 👋</h1>
+          <div style="display:inline-block;margin-bottom:24px;">
+            <img src="https://jcujviegtkwqbybyrrqt.supabase.co/storage/v1/object/public/assets/ReplyGen_logo1.png" alt="ReplyGen" width="160" height="48" style="display:block;border:0;" />
+          </div>
+          <h1 style="color:#F0F0FF;font-size:24px;font-weight:700;margin:0 0 10px;letter-spacing:-0.3px;">Welcome to ReplyGen</h1>
           <p style="color:#8888AA;font-size:15px;line-height:1.65;margin:0;">
             Smart replies, instantly — right from a floating bubble on your screen.
           </p>
@@ -32,7 +36,7 @@ const html = (email: string) => `<!DOCTYPE html>
           <!-- Step 1 -->
           <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:16px;">
             <tr>
-              <td style="width:40px;height:40px;background:#1C1C28;border-radius:10px;text-align:center;vertical-align:middle;font-size:18px;" valign="middle">👆</td>
+              <td style="width:40px;height:40px;min-width:40px;background:#4F8EF7;border-radius:10px;text-align:center;color:#ffffff;font-size:16px;font-weight:700;font-family:Arial,Helvetica,sans-serif;line-height:40px;" valign="middle">1</td>
               <td style="padding-left:14px;color:#C8C8E8;font-size:14px;line-height:1.55;" valign="middle">
                 Enable the <strong style="color:#F0F0FF;">floating bubble</strong> from the app, then open any chat app
               </td>
@@ -42,7 +46,7 @@ const html = (email: string) => `<!DOCTYPE html>
           <!-- Step 2 -->
           <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-bottom:16px;">
             <tr>
-              <td style="width:40px;height:40px;background:#1C1C28;border-radius:10px;text-align:center;vertical-align:middle;font-size:18px;" valign="middle">🧠</td>
+              <td style="width:40px;height:40px;min-width:40px;background:#4F8EF7;border-radius:10px;text-align:center;color:#ffffff;font-size:16px;font-weight:700;font-family:Arial,Helvetica,sans-serif;line-height:40px;" valign="middle">2</td>
               <td style="padding-left:14px;color:#C8C8E8;font-size:14px;line-height:1.55;" valign="middle">
                 Tap the bubble — AI reads the conversation and <strong style="color:#F0F0FF;">labels who said what</strong>
               </td>
@@ -52,7 +56,7 @@ const html = (email: string) => `<!DOCTYPE html>
           <!-- Step 3 -->
           <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
             <tr>
-              <td style="width:40px;height:40px;background:#1C1C28;border-radius:10px;text-align:center;vertical-align:middle;font-size:18px;" valign="middle">📋</td>
+              <td style="width:40px;height:40px;min-width:40px;background:#4F8EF7;border-radius:10px;text-align:center;color:#ffffff;font-size:16px;font-weight:700;font-family:Arial,Helvetica,sans-serif;line-height:40px;" valign="middle">3</td>
               <td style="padding-left:14px;color:#C8C8E8;font-size:14px;line-height:1.55;" valign="middle">
                 Tap <strong style="color:#F0F0FF;">Copy</strong> to paste instantly, or <strong style="color:#F0F0FF;">Scan more</strong> for older context
               </td>
@@ -63,7 +67,9 @@ const html = (email: string) => `<!DOCTYPE html>
         <!-- Tip banner -->
         <tr><td style="padding:0 40px 32px;">
           <div style="background:#0D1B4B;border-radius:10px;padding:16px 18px;border-left:3px solid #4F8EF7;">
-            <p style="color:#8ABAFF;font-size:13px;font-weight:600;margin:0 0 4px;">💡 Pro tip</p>
+            <p style="color:#8ABAFF;font-size:13px;font-weight:600;margin:0 0 4px;">
+              <span style="color:#4F8EF7;margin-right:5px;">&#9733;</span>Pro tip
+            </p>
             <p style="color:#8888AA;font-size:13px;line-height:1.55;margin:0;">
               Scroll up in your chat to load older messages, then tap <strong style="color:#C8C8E8;">Scan more</strong> — ReplyGen builds up context from multiple screenshots for smarter replies.
             </p>
@@ -112,11 +118,40 @@ Deno.serve(async (req) => {
     }
 
     const { email } = await req.json();
-    if (!email) {
+    if (!email || typeof email !== "string") {
       return new Response(JSON.stringify({ error: "email is required" }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
+    }
+
+    // Basic email format validation
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return new Response(JSON.stringify({ error: "Invalid email format" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // Dedup: skip if already sent within 24 hours
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const { data: existing } = await supabaseAdmin
+      .from("welcome_emails_sent")
+      .select("sent_at")
+      .eq("email", email)
+      .maybeSingle();
+    if (existing?.sent_at) {
+      const hoursSince =
+        (Date.now() - new Date(existing.sent_at).getTime()) / 3_600_000;
+      if (hoursSince < 24) {
+        console.log("[send-welcome-email] skipped duplicate for", email);
+        return new Response(JSON.stringify({ ok: true, skipped: true }), {
+          headers: { "Content-Type": "application/json" },
+        });
+      }
     }
 
     const res = await fetch(RESEND_API_URL, {
@@ -144,6 +179,12 @@ Deno.serve(async (req) => {
 
     const data = await res.json();
     console.log("[send-welcome-email] sent to", email, "id:", data.id);
+
+    // Record so future calls within 24 h are skipped
+    await supabaseAdmin
+      .from("welcome_emails_sent")
+      .upsert({ email, sent_at: new Date().toISOString() }, { onConflict: "email" });
+
     return new Response(JSON.stringify({ ok: true }), {
       headers: { "Content-Type": "application/json" },
     });

@@ -4,11 +4,11 @@
     "slug": "ai-reply-assistant",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/ReplyGen_logo_text.png",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/ReplyGen_logo_text.png",
       "resizeMode": "contain",
       "backgroundColor": "#0A0A0F"
     },
@@ -20,7 +20,7 @@
       "package": "com.replygen.app",
       "versionCode": 2,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/ReplyGen_logo_text.png",
         "backgroundColor": "#0A0A0F"
       },
       "permissions": [

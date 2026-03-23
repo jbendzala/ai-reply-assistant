@@ -104,18 +104,18 @@ class OverlayWindow(
 
     val scanMoreHint = TextView(context).apply {
       text = "Scroll in your chat first, then tap"
-      textSize = 11f
-      setTextColor(Color.parseColor("#55556A"))
+      textSize = 12f
+      setTextColor(Color.parseColor("#8888AA"))
       gravity = Gravity.CENTER
-      setPadding(0, dp(5), 0, 0)
+      setPadding(0, 0, 0, dp(8))
       layoutParams = LinearLayout.LayoutParams(
         LinearLayout.LayoutParams.MATCH_PARENT,
         LinearLayout.LayoutParams.WRAP_CONTENT,
       )
     }
 
-    scanMoreContainer.addView(scanMoreBtn)
     scanMoreContainer.addView(scanMoreHint)
+    scanMoreContainer.addView(scanMoreBtn)
     card.addView(scanMoreContainer)
 
     // ── Reply rows ──
