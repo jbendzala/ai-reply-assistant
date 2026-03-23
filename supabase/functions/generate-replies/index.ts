@@ -1,7 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages";
-const FREE_TIER_LIMIT = 50;
+const FREE_TIER_LIMIT = 30;
 const BODY_SIZE_LIMIT = 8_000; // bytes — stops giant OCR payloads from inflating input tokens
 const BURST_INTERVAL_SECONDS = 3; // minimum seconds between scans per user
 

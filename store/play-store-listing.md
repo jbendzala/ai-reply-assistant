@@ -27,7 +27,7 @@ Screen content is processed in real time and immediately discarded. Nothing is s
 • One-tap screen scan with instant OCR
 • Three AI reply suggestions per scan
 • Tone selector: Casual · Formal · Friendly · Witty
-• 50 free scans per month
+• 30 free scans per month
 • Works with WhatsApp, Messenger, SMS, Telegram, Instagram, and more
 
 **Permissions used**

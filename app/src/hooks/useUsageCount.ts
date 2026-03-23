@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from '../store/useAuthStore';
 
-const FREE_TIER_LIMIT = 50;
+const FREE_TIER_LIMIT = 30;
 
 export function useUsageCount() {
   const [count, setCount] = useState<number | null>(null);

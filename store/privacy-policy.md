@@ -1,4 +1,4 @@
-# Privacy Policy — AI Reply Assistant
+# Privacy Policy — ReplyGen
 
 **Last updated: March 18, 2026**
 
@@ -13,7 +13,7 @@ AI Reply Assistant ("the App") helps you generate smart reply suggestions for yo
 - **Google account info** (if you use Google Sign-In) — name, email, and profile picture as provided by Google. We do not store this beyond your session.
 
 ### Usage data
-- **Scan count** — we record how many times per month you use the scan feature. This is used only to enforce the free tier limit (50 scans/month) and to display your usage in the app.
+- **Scan count** — we record how many times per month you use the scan feature. This is used only to enforce the free tier limit (30 scans/month) and to display your usage in the app.
 
 ## What We Do NOT Collect
 
