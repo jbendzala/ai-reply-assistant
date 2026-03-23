@@ -18,7 +18,7 @@
     },
     "android": {
       "package": "com.replygen.app",
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/ReplyGen_logo_text.png",
         "backgroundColor": "#0A0A0F"
