@@ -20,6 +20,7 @@ class OverlayWindow(
   private val replies: List<String>,
   private val onDismiss: () -> Unit,
   private val onScanMore: () -> Unit,
+  private val limitReachedMessage: String? = null,
 ) {
 
   private var rootView: View? = null
@@ -72,92 +73,136 @@ class OverlayWindow(
       ).apply { setMargins(0, dp(8), 0, dp(8)) }
     })
 
-    // ── Scan more ──
-    val scanMoreContainer = LinearLayout(context).apply {
-      orientation = LinearLayout.VERTICAL
-      layoutParams = LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.MATCH_PARENT,
-        LinearLayout.LayoutParams.WRAP_CONTENT,
-      ).apply { setMargins(0, 0, 0, dp(12)) }
-    }
-
-    val scanMoreBtn = TextView(context).apply {
-      text = "📷  Scan more context"
-      textSize = 13f
-      setTextColor(Color.parseColor("#4F8EF7"))
-      gravity = Gravity.CENTER
-      setPadding(dp(12), dp(10), dp(12), dp(10))
-      background = GradientDrawable().apply {
-        setColor(Color.parseColor("#1A1A2E"))
-        cornerRadius = dp(8).toFloat()
-        setStroke(dp(1), Color.parseColor("#2A2A3D"))
+    when {
+      // ── Limit-reached state ──
+      limitReachedMessage != null -> {
+        card.addView(TextView(context).apply {
+          text = "🔒  Monthly limit reached"
+          textSize = 15f
+          setTextColor(Color.parseColor("#F0F0FF"))
+          gravity = Gravity.CENTER
+          setPadding(dp(12), dp(16), dp(12), dp(4))
+          layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+          )
+        })
+        card.addView(TextView(context).apply {
+          text = "You've used all your free scans this month.\nUpgrade to Pro for unlimited replies."
+          textSize = 13f
+          setTextColor(Color.parseColor("#8888AA"))
+          gravity = Gravity.CENTER
+          setPadding(dp(12), dp(4), dp(12), dp(20))
+          layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+          )
+        })
       }
-      layoutParams = LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.MATCH_PARENT,
-        LinearLayout.LayoutParams.WRAP_CONTENT,
-      )
-      setOnClickListener {
-        this@OverlayWindow.dismiss(notify = false)
-        onScanMore()
+
+      // ── Empty state ──
+      replies.isEmpty() -> {
+        card.addView(TextView(context).apply {
+          text = "No conversation detected.\nPoint the screen at a chat and try again."
+          textSize = 14f
+          setTextColor(Color.parseColor("#8888AA"))
+          gravity = Gravity.CENTER
+          setPadding(dp(12), dp(16), dp(12), dp(16))
+          layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+          )
+        })
       }
-    }
 
-    val scanMoreHint = TextView(context).apply {
-      text = "Scroll in your chat first, then tap"
-      textSize = 12f
-      setTextColor(Color.parseColor("#8888AA"))
-      gravity = Gravity.CENTER
-      setPadding(0, 0, 0, dp(8))
-      layoutParams = LinearLayout.LayoutParams(
-        LinearLayout.LayoutParams.MATCH_PARENT,
-        LinearLayout.LayoutParams.WRAP_CONTENT,
-      )
-    }
-
-    scanMoreContainer.addView(scanMoreHint)
-    scanMoreContainer.addView(scanMoreBtn)
-    card.addView(scanMoreContainer)
-
-    // ── Reply rows ──
-    replies.forEach { replyText ->
-      val row = LinearLayout(context).apply {
-        orientation = LinearLayout.HORIZONTAL
-        gravity = Gravity.CENTER_VERTICAL
-        setPadding(dp(12), dp(10), dp(12), dp(10))
-        background = GradientDrawable().apply {
-          setColor(Color.parseColor("#1C1C28"))
-          cornerRadius = dp(12).toFloat()
+      // ── Scan more + reply rows ──
+      else -> {
+        val scanMoreContainer = LinearLayout(context).apply {
+          orientation = LinearLayout.VERTICAL
+          layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+          ).apply { setMargins(0, 0, 0, dp(12)) }
         }
-        layoutParams = LinearLayout.LayoutParams(
-          LinearLayout.LayoutParams.MATCH_PARENT,
-          LinearLayout.LayoutParams.WRAP_CONTENT,
-        ).apply { setMargins(0, 0, 0, dp(8)) }
-      }
 
-      val replyTv = TextView(context).apply {
-        text = replyText
-        textSize = 15f
-        setTextColor(Color.parseColor("#F0F0FF"))
-        layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-      }
+        val scanMoreBtn = TextView(context).apply {
+          text = "📷  Scan more context"
+          textSize = 13f
+          setTextColor(Color.parseColor("#4F8EF7"))
+          gravity = Gravity.CENTER
+          setPadding(dp(12), dp(10), dp(12), dp(10))
+          background = GradientDrawable().apply {
+            setColor(Color.parseColor("#1A1A2E"))
+            cornerRadius = dp(8).toFloat()
+            setStroke(dp(1), Color.parseColor("#2A2A3D"))
+          }
+          layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+          )
+          setOnClickListener {
+            this@OverlayWindow.dismiss(notify = false)
+            onScanMore()
+          }
+        }
 
-      val copyBtn = TextView(context).apply {
-        text = "Copy"
-        textSize = 13f
-        setTextColor(Color.parseColor("#4F8EF7"))
-        setPadding(dp(8), 0, 0, 0)
-        setOnClickListener {
-          val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-          clipboard.setPrimaryClip(ClipData.newPlainText("reply", replyText))
-          text = "✓"
-          setTextColor(Color.parseColor("#34D399"))
-          postDelayed({ dismiss() }, 600)
+        val scanMoreHint = TextView(context).apply {
+          text = "Scroll in your chat first, then tap"
+          textSize = 12f
+          setTextColor(Color.parseColor("#8888AA"))
+          gravity = Gravity.CENTER
+          setPadding(0, 0, 0, dp(8))
+          layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+          )
+        }
+
+        scanMoreContainer.addView(scanMoreHint)
+        scanMoreContainer.addView(scanMoreBtn)
+        card.addView(scanMoreContainer)
+
+        replies.forEach { replyText ->
+          val row = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(12), dp(10), dp(12), dp(10))
+            background = GradientDrawable().apply {
+              setColor(Color.parseColor("#1C1C28"))
+              cornerRadius = dp(12).toFloat()
+            }
+            layoutParams = LinearLayout.LayoutParams(
+              LinearLayout.LayoutParams.MATCH_PARENT,
+              LinearLayout.LayoutParams.WRAP_CONTENT,
+            ).apply { setMargins(0, 0, 0, dp(8)) }
+          }
+
+          val replyTv = TextView(context).apply {
+            text = replyText
+            textSize = 15f
+            setTextColor(Color.parseColor("#F0F0FF"))
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+          }
+
+          val copyBtn = TextView(context).apply {
+            text = "Copy"
+            textSize = 13f
+            setTextColor(Color.parseColor("#4F8EF7"))
+            setPadding(dp(8), 0, 0, 0)
+            setOnClickListener {
+              val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+              clipboard.setPrimaryClip(ClipData.newPlainText("reply", replyText))
+              text = "✓"
+              setTextColor(Color.parseColor("#34D399"))
+              postDelayed({ dismiss() }, 600)
+            }
+          }
+
+          row.addView(replyTv)
+          row.addView(copyBtn)
+          card.addView(row)
         }
       }
-
-      row.addView(replyTv)
-      row.addView(copyBtn)
-      card.addView(row)
     }
 
     // ── WindowManager params ──

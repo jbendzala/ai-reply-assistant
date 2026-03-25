@@ -2,13 +2,13 @@
   "expo": {
     "name": "ReplyGen",
     "slug": "ai-reply-assistant",
-    "version": "1.0.0",
+    "version": "1.0.3",
     "orientation": "portrait",
-    "icon": "./assets/ReplyGen_logo_text.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/ReplyGen_logo_text.png",
+      "image": "./assets/icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#0A0A0F"
     },
@@ -18,9 +18,9 @@
     },
     "android": {
       "package": "com.replygen.app",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/ReplyGen_logo_text.png",
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0A0A0F"
       },
       "permissions": [

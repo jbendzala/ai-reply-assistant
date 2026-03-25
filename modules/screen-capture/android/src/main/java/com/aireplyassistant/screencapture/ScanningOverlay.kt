@@ -12,7 +12,6 @@ import android.os.Looper
 import android.view.View
 import kotlin.math.PI
 import kotlin.math.cos
-import kotlin.math.hypot
 import kotlin.math.sin
 
 class ScanningOverlay(context: Context) : View(context) {
@@ -62,14 +61,11 @@ class ScanningOverlay(context: Context) : View(context) {
     val cx = w / 2f
     val cy = h / 2f
 
-    // Max radius that reaches the screen corners
-    val maxR = hypot(cx, cy)
-
     // Background
     canvas.drawRect(0f, 0f, w, h, bgPaint)
 
-    // ── Wavy energy band — traces a wobbling circle at mid-screen radius ─────
-    val waveR = maxR * (0.38f + sin(time * 1.0f) * 0.06f)
+    // ── Wavy energy band — radius based on cx so it stays within screen ──────
+    val waveR = cx * (0.68f + sin(time * 1.0f) * 0.06f)
     for (wave in 0..1) {
       val phaseOffset = wave * PI.toFloat()
       wavePath.reset()
@@ -91,7 +87,7 @@ class ScanningOverlay(context: Context) : View(context) {
 
     // ── Pulsing radial fill — fills center, fades to edges ──────────────────
     // Gives a deep "breathing" heartbeat to the whole screen.
-    val fillR = maxR * (0.60f + sin(time * 1.8f) * 0.18f)
+    val fillR = cx * (1.0f + sin(time * 1.8f) * 0.15f)
     corePaint.shader = RadialGradient(
       cx, cy, fillR,
       intArrayOf(

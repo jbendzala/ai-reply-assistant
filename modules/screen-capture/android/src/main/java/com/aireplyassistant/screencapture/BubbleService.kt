@@ -300,14 +300,15 @@ class BubbleService : Service() {
       .addOnSuccessListener { visionText ->
         bitmap.recycle()
         val structured = buildConversationText(visionText.textBlocks, width)
-        if (structured.isNotEmpty()) {
+        val hasConversation = structured.contains("Me:") || structured.contains("Them:")
+        if (structured.isNotEmpty() && hasConversation) {
           capturedSegments.add(0, structured)
           onTextExtracted(capturedSegments.joinToString("\n\n"))
           scheduleCaptureTineout()
         } else if (capturedSegments.isEmpty()) {
           hideScanningOverlay()
           stopCapture()
-          emitError("No text found on screen")
+          showOverlayWithReplies(emptyList())
         } else {
           // Additional scan found nothing new — re-show last replies
           hideScanningOverlay()
@@ -377,7 +378,11 @@ class BubbleService : Service() {
           } catch (_: Exception) { null } ?: "Something went wrong. Please try again."
           android.os.Handler(mainLooper).post {
             hideScanningOverlay()
-            android.widget.Toast.makeText(applicationContext, errorMsg, android.widget.Toast.LENGTH_LONG).show()
+            if (code == 429 && errorMsg.contains("limit", ignoreCase = true)) {
+              showLimitReachedOverlay(errorMsg)
+            } else {
+              android.widget.Toast.makeText(applicationContext, errorMsg, android.widget.Toast.LENGTH_LONG).show()
+            }
           }
           return
         }
@@ -451,6 +456,23 @@ class BubbleService : Service() {
         showScanningOverlay()
         android.os.Handler(mainLooper).postDelayed({ grabFrame() }, 400)
       },
+    )
+    overlayWindow!!.show()
+  }
+
+  private fun showLimitReachedOverlay(message: String) {
+    overlayWindow?.dismiss(notify = false)
+    overlayWindow = OverlayWindow(
+      context = this,
+      windowManager = windowManager,
+      replies = emptyList(),
+      onDismiss = {
+        overlayWindow = null
+        capturedSegments.clear()
+        lastReplies = null
+      },
+      onScanMore = {},
+      limitReachedMessage = message,
     )
     overlayWindow!!.show()
   }

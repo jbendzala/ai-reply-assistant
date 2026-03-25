@@ -115,12 +115,12 @@ class BubbleView(
     // Background
     canvas.drawCircle(cx, cy, r, bgPaint)
 
-    // ── Water-drop ripple rings (2 staggered, slow and faint) ────────────────
+    // ── Water-drop ripple rings (3 staggered) ────────────────────────────────
     for (i in 0 until 2) {
-      val phase = ((time * 0.18f + i * 0.5f) % 1f)
+      val phase = ((time * 0.24f + i * 0.50f) % 1f)
       val radius = r * (0.25f + phase * 0.72f)
-      val alpha = (sin(phase * Math.PI.toFloat()) * 28f).toInt().coerceIn(0, 28)
-      ripplePaint.strokeWidth = 0.9f * dp
+      val alpha = (sin(phase * Math.PI.toFloat()) * 65f).toInt().coerceIn(0, 65)
+      ripplePaint.strokeWidth = 1.6f * dp
       ripplePaint.alpha = alpha
       canvas.drawCircle(cx, cy, radius, ripplePaint)
     }
