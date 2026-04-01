@@ -184,7 +184,7 @@
       background: var(--surface);
       border-radius: 36px;
       border: 1.5px solid var(--border);
-      padding: 20px 16px;
+      padding: 20px 16px 28px;
       box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
       position: relative;
       overflow: hidden;
@@ -407,17 +407,21 @@
         <div class="chat-row them">
           <div class="bubble-msg">Thinking dinner at that new place on Main?</div>
         </div>
+        <div class="chat-row me">
+          <div class="bubble-msg">Sounds good, what time were you thinking?</div>
+        </div>
+        <div class="chat-row them">
+          <div class="bubble-msg">Around 7? They take reservations 🍝</div>
+        </div>
         <div class="reply-card">
           <div class="reply-card-label">ReplyGen suggests</div>
-          <div class="reply-option">Sounds great, what time? <span class="copy-btn">Copy</span></div>
+          <div class="reply-option">7 works perfectly, I'll book it! <span class="copy-btn">Copy</span></div>
           <div class="reply-option">I'm in! See you there 🙌 <span class="copy-btn">Copy</span></div>
           <div class="reply-option">Love that place, let's do it! <span class="copy-btn">Copy</span></div>
         </div>
       </div>
       <div class="floating-bubble">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-        </svg>
+        <span style="color:#fff;font-size:11px;font-weight:800;letter-spacing:-0.5px;font-family:'Inter',sans-serif;">AI</span>
       </div>
     </div>
   </div>
