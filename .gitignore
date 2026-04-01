@@ -44,3 +44,6 @@ app/android
 /app.json
 
 # EAS secrets
+
+# Google Play service account (contains private key — never commit)
+google-play-service-account.json
