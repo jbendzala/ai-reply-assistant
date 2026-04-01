@@ -30,6 +30,14 @@
           }
         },
         {
+          "client_id": "69435432358-j9bs2f2pg6afh5e6rrbsgrp8iatfdsht.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aireplyassistant.app",
+            "certificate_hash": "f2a356443be0fa1be337878b6fcd496bbaab6182"
+          }
+        },
+        {
           "client_id": "69435432358-hbc6erh9siq4m229rjdii7vc2ip7ibo4.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -64,6 +72,14 @@
           "android_info": {
             "package_name": "com.replygen.app",
             "certificate_hash": "d83bfa323c6b73b212d19b76916b35d3877c298e"
+          }
+        },
+        {
+          "client_id": "69435432358-7fdgrsr15ulhcqjabu1na3e6r26mtqrn.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.replygen.app",
+            "certificate_hash": "f2a356443be0fa1be337878b6fcd496bbaab6182"
           }
         },
         {

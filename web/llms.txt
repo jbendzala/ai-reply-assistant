@@ -1,0 +1,35 @@
+# ReplyGen
+
+ReplyGen is an AI-powered reply assistant app for Android.
+
+## What it does
+
+ReplyGen displays a floating bubble over any Android messaging app (WhatsApp, SMS, Instagram, Telegram, etc.). When the user taps the bubble, it scans the visible conversation using OCR, identifies who said what (Me vs Them), and generates three contextually appropriate reply suggestions using AI. The user copies a reply and pastes it directly into their messaging app — without ever leaving it.
+
+## Key features
+
+- Floating overlay bubble that works across all Android messaging apps
+- Screen OCR to read conversation context in real time
+- AI-generated reply suggestions powered by Claude (Anthropic)
+- Five reply tones: Casual, Friendly, Formal, Witty, Flirty
+- "Scan more" to include older messages for richer context
+- Me vs Them conversation labelling for accurate context
+- 30 free scans per month — no credit card required
+- Pro plan (unlimited scans) coming soon
+
+## Platform
+
+- Android (available on Google Play)
+- iOS coming soon
+
+## Pricing
+
+- Free: 30 AI scans per month
+- Pro: Unlimited scans — $4.99/month (coming soon)
+
+## Links
+
+- Website: https://replygen.co
+- Google Play: https://play.google.com/store/apps/details?id=com.replygen.app
+- Privacy Policy: https://replygen.co/privacy.html
+- Contact: hello@replygen.co
