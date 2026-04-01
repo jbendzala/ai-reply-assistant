@@ -94,6 +94,11 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── Pro status ───────────────────────────────────────────────────────────
+    // app_metadata is written exclusively by the revenuecat-webhook function
+    // using the service role key — it cannot be spoofed by the client.
+    const isPro = user.app_metadata?.is_pro === true;
+
     // ── Usage check (before incrementing) ───────────────────────────────────
     // Checking first ensures we never charge a blocked request against the quota.
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
@@ -140,10 +145,11 @@ Deno.serve(async (req) => {
       currentCount = (usageRow?.count ?? 0) as number;
     }
 
-    if (currentCount >= FREE_TIER_LIMIT) {
+    if (!isPro && currentCount >= FREE_TIER_LIMIT) {
       return new Response(
         JSON.stringify({
-          error: `Monthly scan limit of ${FREE_TIER_LIMIT} reached. Upgrade for unlimited scans.`,
+          error: `Monthly scan limit of ${FREE_TIER_LIMIT} reached. Upgrade to Pro for unlimited scans.`,
+          limitReached: true,
         }),
         { status: 429, headers: { "Content-Type": "application/json" } }
       );

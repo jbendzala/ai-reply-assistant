@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,11 +14,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUsageCount } from '../../src/hooks/useUsageCount';
 import { useAuthStore } from '../../src/store/useAuthStore';
+import { useProStore } from '../../src/store/useProStore';
 import { Colors, Radius, Spacing, Typography } from '../../src/utils/theme';
 import { validatePassword } from '../../src/utils/validatePassword';
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const { session, signOut, changePassword, deleteAccount } = useAuthStore();
+  const { isPro } = useProStore();
   const [deleteLoading, setDeleteLoading] = useState(false);
   const { count, loading: usageLoading, limit, resetDate } = useUsageCount();
 
@@ -102,31 +106,61 @@ export default function SettingsScreen() {
       >
         <Text style={styles.pageTitle}>Settings</Text>
 
+        <Text style={styles.sectionLabel}>SUBSCRIPTION</Text>
+        {isPro ? (
+          <View style={styles.proBadgeCard}>
+            <Ionicons name="flash" size={18} color={Colors.accentBlue} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.proTitle}>ReplyGen Pro</Text>
+              <Text style={styles.proSub}>Unlimited scans — active</Text>
+            </View>
+          </View>
+        ) : (
+          <TouchableOpacity
+            style={styles.upgradeBtn}
+            onPress={() => router.push('/paywall')}
+            activeOpacity={0.85}
+          >
+            <Ionicons name="flash-outline" size={18} color="#fff" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.upgradeTitle}>Upgrade to Pro</Text>
+              <Text style={styles.upgradeSub}>Unlimited scans · $4.99 / month</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={16} color="rgba(255,255,255,0.6)" />
+          </TouchableOpacity>
+        )}
+
         <Text style={styles.sectionLabel}>USAGE THIS MONTH</Text>
-        <View style={styles.usageCard}>
-          <View style={styles.usageRow}>
-            <Text style={styles.usageText}>
-              {usageLoading || count === null ? '—' : count} / {limit} scans used
-            </Text>
-            <Text style={styles.usageReset}>Resets {resetDate}</Text>
+        {isPro ? (
+          <View style={styles.usageCard}>
+            <Text style={styles.usageText}>Unlimited scans</Text>
           </View>
-          <View style={styles.usageTrack}>
-            <View
-              style={[
-                styles.usageFill,
-                {
-                  width: `${Math.min(((count ?? 0) / limit) * 100, 100)}%`,
-                  backgroundColor:
-                    (count ?? 0) >= limit
-                      ? Colors.error
-                      : (count ?? 0) >= limit * 0.8
-                      ? '#F59E0B'
-                      : Colors.accentBlue,
-                },
-              ]}
-            />
+        ) : (
+          <View style={styles.usageCard}>
+            <View style={styles.usageRow}>
+              <Text style={styles.usageText}>
+                {usageLoading || count === null ? '—' : count} / {limit} scans used
+              </Text>
+              <Text style={styles.usageReset}>Resets {resetDate}</Text>
+            </View>
+            <View style={styles.usageTrack}>
+              <View
+                style={[
+                  styles.usageFill,
+                  {
+                    width: `${Math.min(((count ?? 0) / limit) * 100, 100)}%`,
+                    backgroundColor:
+                      (count ?? 0) >= limit
+                        ? Colors.error
+                        : (count ?? 0) >= limit * 0.8
+                        ? '#F59E0B'
+                        : Colors.accentBlue,
+                  },
+                ]}
+              />
+            </View>
           </View>
-        </View>
+        )}
 
         <Text style={styles.sectionLabel}>ACCOUNT</Text>
         <View style={styles.accountCard}>
@@ -401,5 +435,41 @@ const styles = StyleSheet.create({
   usageFill: {
     height: 4,
     borderRadius: 2,
+  },
+  proBadgeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: Colors.accentBlue,
+    padding: Spacing.lg,
+  },
+  proTitle: {
+    ...Typography.label,
+    color: Colors.textPrimary,
+  },
+  proSub: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  upgradeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    backgroundColor: Colors.accentBlue,
+    borderRadius: Radius.md,
+    padding: Spacing.lg,
+  },
+  upgradeTitle: {
+    ...Typography.label,
+    color: '#fff',
+  },
+  upgradeSub: {
+    ...Typography.caption,
+    color: 'rgba(255,255,255,0.7)',
+    marginTop: 2,
   },
 });

@@ -1,15 +1,28 @@
-import { Redirect, Stack } from 'expo-router';
+import { Redirect, Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import * as Linking from 'expo-linking';
 import { useEffect } from 'react';
 import { useAuthStore } from '../src/store/useAuthStore';
+import { useProStore } from '../src/store/useProStore';
 import { Colors } from '../src/utils/theme';
 
 export default function RootLayout() {
   const { session, isInitializing, initialize, isPasswordRecovery } = useAuthStore();
+  const { initialize: initPro } = useProStore();
+  const router = useRouter();
 
   useEffect(() => {
     initialize();
-  }, [initialize]);
+    initPro();
+  }, [initialize, initPro]);
+
+  // Handle replygen://paywall deep link (fired from native OverlayWindow upgrade button)
+  useEffect(() => {
+    const sub = Linking.addEventListener('url', ({ url }) => {
+      if (url.includes('paywall') && session) router.push('/paywall');
+    });
+    return () => sub.remove();
+  }, [session]);
 
   // Still restoring session from storage — render nothing to avoid flicker
   if (isInitializing) return null;
@@ -37,6 +50,7 @@ export default function RootLayout() {
         <Stack.Screen name="onboarding" />
         <Stack.Screen name="auth" />
         <Stack.Screen name="reset-password" />
+        <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
         <Stack.Screen name="(tabs)" />
       </Stack>
     </>

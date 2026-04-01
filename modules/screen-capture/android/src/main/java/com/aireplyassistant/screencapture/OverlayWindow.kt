@@ -3,6 +3,7 @@ package com.aireplyassistant.screencapture
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.drawable.GradientDrawable
@@ -92,11 +93,33 @@ class OverlayWindow(
           textSize = 13f
           setTextColor(Color.parseColor("#8888AA"))
           gravity = Gravity.CENTER
-          setPadding(dp(12), dp(4), dp(12), dp(20))
+          setPadding(dp(12), dp(4), dp(12), dp(12))
           layoutParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT,
             LinearLayout.LayoutParams.WRAP_CONTENT,
           )
+        })
+        card.addView(TextView(context).apply {
+          text = "Upgrade to Pro →"
+          textSize = 14f
+          setTextColor(Color.parseColor("#4F8EF7"))
+          gravity = Gravity.CENTER
+          setPadding(dp(12), dp(12), dp(12), dp(12))
+          background = GradientDrawable().apply {
+            setColor(Color.parseColor("#0D1B4B"))
+            cornerRadius = dp(10).toFloat()
+            setStroke(dp(1), Color.parseColor("#4F8EF7"))
+          }
+          layoutParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+          ).apply { setMargins(0, 0, 0, dp(8)) }
+          setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW, android.net.Uri.parse("replygen://paywall"))
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            context.startActivity(intent)
+            dismiss()
+          }
         })
       }
 
