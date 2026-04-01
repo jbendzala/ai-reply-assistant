@@ -60,12 +60,12 @@ const ALL_PAGES = [
 // Permission page only shown on Android — iOS handles overlay differently
 const PAGES = ALL_PAGES.filter((p: any) => !p.androidOnly || Platform.OS === 'android');
 
-const TONES: { value: TonePreference; label: string; desc: string; pro?: boolean }[] = [
+const TONES: { value: TonePreference; label: string; desc: string }[] = [
   { value: 'casual',   label: 'Casual',   desc: 'Relaxed, everyday' },
   { value: 'friendly', label: 'Friendly', desc: 'Warm & approachable' },
   { value: 'formal',   label: 'Formal',   desc: 'Professional & polished' },
-  { value: 'witty',    label: 'Witty',    desc: 'Clever & playful',   pro: true },
-  { value: 'flirty',   label: 'Flirty',   desc: 'Charming & playful', pro: true },
+  { value: 'witty',    label: 'Witty',    desc: 'Clever & playful' },
+  { value: 'flirty',   label: 'Flirty',   desc: 'Charming & playful' },
 ];
 
 export default function OnboardingScreen() {
@@ -121,7 +121,6 @@ export default function OnboardingScreen() {
 
   const isLastPage = page === PAGES.length - 1;
   const isPermissionPage = currentPage?.id === 'permission';
-  const isDonePage = currentPage?.id === 'done';
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -206,32 +205,25 @@ export default function OnboardingScreen() {
             {/* Tone picker — done page */}
             {p.id === 'done' && (
               <View style={styles.toneGrid}>
-                {TONES.map(({ value, label, desc, pro }) => (
+                {TONES.map(({ value, label, desc }) => (
                   <TouchableOpacity
                     key={value}
                     style={[
                       styles.toneCard,
                       selectedTone === value && styles.toneCardSelected,
-                      pro && styles.toneCardLocked,
                     ]}
-                    onPress={pro ? undefined : () => setSelectedTone(value)}
-                    activeOpacity={pro ? 1 : 0.7}
+                    onPress={() => setSelectedTone(value)}
+                    activeOpacity={0.7}
                   >
                     <View style={styles.toneLabelRow}>
                       <Text
                         style={[
                           styles.toneLabel,
                           selectedTone === value && styles.toneLabelSelected,
-                          pro && styles.toneLabelLocked,
                         ]}
                       >
                         {label}
                       </Text>
-                      {pro && (
-                        <View style={styles.toneLockBadge}>
-                          <Text style={styles.toneLockBadgeText}>PRO</Text>
-                        </View>
-                      )}
                     </View>
                     <Text style={styles.toneDesc}>{desc}</Text>
                   </TouchableOpacity>
@@ -425,9 +417,6 @@ const styles = StyleSheet.create({
     borderColor: Colors.accentBlue,
     backgroundColor: 'rgba(79,142,247,0.08)',
   },
-  toneCardLocked: {
-    opacity: 0.55,
-  },
   toneLabelRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -440,23 +429,6 @@ const styles = StyleSheet.create({
   },
   toneLabelSelected: {
     color: Colors.accentBlue,
-  },
-  toneLabelLocked: {
-    color: Colors.textDisabled,
-  },
-  toneLockBadge: {
-    backgroundColor: 'rgba(79,142,247,0.15)',
-    borderRadius: 4,
-    paddingHorizontal: 5,
-    paddingVertical: 1,
-    borderWidth: 1,
-    borderColor: 'rgba(79,142,247,0.3)',
-  },
-  toneLockBadgeText: {
-    fontSize: 9,
-    fontWeight: '700' as const,
-    color: Colors.accentBlue,
-    letterSpacing: 0.5,
   },
   toneDesc: {
     ...Typography.caption,

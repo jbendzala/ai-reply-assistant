@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, AppState, Platform, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { AppState, Platform, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ScreenCapture from 'screen-capture';
 import { PermissionStatusCard } from '../../src/components/PermissionStatusCard';
@@ -142,28 +142,18 @@ export default function HomeScreen() {
         {/* Tone selector */}
         <Text style={styles.sectionLabel}>REPLY TONE</Text>
         <View style={styles.toneRow}>
-          {(['casual', 'formal', 'friendly', 'witty', 'flirty'] as const).map((t) => {
-            const isPro = t === 'witty' || t === 'flirty';
-            return (
-              <TouchableOpacity
-                key={t}
-                style={[styles.toneChip, tone === t && styles.toneChipActive, isPro && styles.toneChipLocked]}
-                onPress={() => {
-                  if (isPro) {
-                    Alert.alert('Pro Feature', 'Witty and Flirty tones are available in the Pro plan. Coming soon!');
-                    return;
-                  }
-                  setTone(t);
-                }}
-                activeOpacity={isPro ? 0.6 : 0.7}
-              >
-                <Text style={[styles.toneChipText, tone === t && styles.toneChipTextActive, isPro && styles.toneChipTextLocked]}>
-                  {t.charAt(0).toUpperCase() + t.slice(1)}
-                </Text>
-                {isPro && <Text style={styles.proBadge}>PRO</Text>}
-              </TouchableOpacity>
-            );
-          })}
+          {(['casual', 'formal', 'friendly', 'witty', 'flirty'] as const).map((t) => (
+            <TouchableOpacity
+              key={t}
+              style={[styles.toneChip, tone === t && styles.toneChipActive]}
+              onPress={() => setTone(t)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.toneChipText, tone === t && styles.toneChipTextActive]}>
+                {t.charAt(0).toUpperCase() + t.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         {/* Scan input */}
@@ -257,18 +247,5 @@ const styles = StyleSheet.create({
   },
   toneChipTextActive: {
     color: Colors.textPrimary,
-  },
-  toneChipLocked: {
-    opacity: 0.45,
-  },
-  toneChipTextLocked: {
-    color: Colors.textDisabled,
-  },
-  proBadge: {
-    fontSize: 9,
-    fontWeight: '700' as const,
-    color: Colors.accentBlue,
-    letterSpacing: 0.5,
-    marginTop: 1,
   },
 });

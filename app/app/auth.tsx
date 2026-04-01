@@ -24,11 +24,10 @@ export default function AuthScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [forgotMode, setForgotMode] = useState(false);
   const [forgotSent, setForgotSent] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
 
-  const { signIn, signUp, signInWithGoogle, resetPassword } = useAuthStore();
+  const { signIn, signUp, signInWithGoogle, resetPassword, pendingVerificationEmail } = useAuthStore();
 
   async function handleSubmit() {
     setLocalError('');
@@ -92,6 +91,25 @@ export default function AuthScreen() {
   }
 
   const anyLoading = isSubmitting || isGoogleLoading;
+
+  // ── Email verification pending ─────────────────────────────────────────────
+  if (pendingVerificationEmail) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.verifyContainer}>
+          <Ionicons name="mail-outline" size={56} color={Colors.accentBlue} />
+          <Text style={styles.verifyTitle}>Check your inbox</Text>
+          <Text style={styles.verifyBody}>
+            We sent a confirmation link to{'\n'}
+            <Text style={styles.verifyEmail}>{pendingVerificationEmail}</Text>
+          </Text>
+          <Text style={styles.verifyHint}>
+            Tap the link in the email to activate your account. Check your spam folder if you don't see it.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -396,5 +414,33 @@ const styles = StyleSheet.create({
     ...Typography.body,
     color: Colors.accentBlue,
     fontWeight: '600',
+  },
+  verifyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.xxl,
+    gap: Spacing.lg,
+  },
+  verifyTitle: {
+    ...Typography.displaySm,
+    color: Colors.textPrimary,
+    textAlign: 'center',
+  },
+  verifyBody: {
+    ...Typography.body,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  verifyEmail: {
+    color: Colors.textPrimary,
+    fontWeight: '600',
+  },
+  verifyHint: {
+    ...Typography.caption,
+    color: Colors.textDisabled,
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });

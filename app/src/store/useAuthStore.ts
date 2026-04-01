@@ -11,6 +11,8 @@ interface AuthState {
   isInitializing: boolean;
   /** True when the app was opened via a password-reset deep link. */
   isPasswordRecovery: boolean;
+  /** Set after sign-up when Supabase requires email confirmation. */
+  pendingVerificationEmail: string | null;
   initialize: () => void;
   signUp: (email: string, password: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
@@ -27,6 +29,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   session: null,
   isInitializing: true,
   isPasswordRecovery: false,
+  pendingVerificationEmail: null,
 
   initialize: () => {
     // Supabase may send password-reset links in either format:
@@ -81,9 +84,54 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return false;
     };
 
+    // Handles email confirmation deep links (replygen://confirm-email?code=... or #access_token=...)
+    const applyConfirmUrl = async (url: string): Promise<boolean> => {
+      const sendWelcome = (email: string) => {
+        fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/send-welcome-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '',
+            'Authorization': `Bearer ${process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? ''}`,
+          },
+          body: JSON.stringify({ email }),
+        }).catch(() => {});
+      };
+
+      // ── PKCE path ──────────────────────────────────────────────────────────
+      try {
+        const { data, error } = await supabase.auth.exchangeCodeForSession(url);
+        if (!error && data.session) {
+          set({ session: data.session, pendingVerificationEmail: null });
+          if (data.session.user.email) sendWelcome(data.session.user.email);
+          return true;
+        }
+      } catch { /* fall through */ }
+
+      // ── Implicit path (tokens in hash fragment) ────────────────────────────
+      try {
+        const hash = url.split('#')[1] ?? '';
+        const params = new URLSearchParams(hash);
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        if (accessToken && refreshToken) {
+          const { data, error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+          if (!error && data.session) {
+            set({ session: data.session, pendingVerificationEmail: null });
+            if (data.session.user.email) sendWelcome(data.session.user.email);
+            return true;
+          }
+        }
+      } catch { /* fall through */ }
+
+      Alert.alert('Verification Failed', 'The confirmation link is invalid or has already been used.');
+      return false;
+    };
+
     // Warm-start: app is already running when the user taps the reset link.
     Linking.addEventListener('url', async ({ url }) => {
       if (url.includes('reset-password')) await applyResetUrl(url);
+      if (url.includes('confirm-email')) await applyConfirmUrl(url);
     });
 
     // Cold-start: app was launched from the reset link (or a normal launch).
@@ -96,6 +144,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           set({ isInitializing: false });
           return;
         }
+      }
+      if (url && url.includes('confirm-email')) {
+        await applyConfirmUrl(url);
+        set({ isInitializing: false });
+        return;
       }
       // Normal start, or URL exchange failed — restore session from storage.
       const { data: { session } } = await supabase.auth.getSession();
@@ -122,21 +175,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signUp: async (email, password) => {
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: 'replygen://confirm-email' },
+    });
     if (error) throw error;
+    // Supabase returns session=null when email confirmation is required.
+    // Welcome email is sent after the user clicks the confirmation link.
+    if (!data.session) {
+      set({ pendingVerificationEmail: email });
+      return;
+    }
     set({ session: data.session });
-    // Fire-and-forget — don't block or throw if the email fails
-    fetch(`${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1/send-welcome-email`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? '',
-        'Authorization': `Bearer ${process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? ''}`,
-      },
-      body: JSON.stringify({ email }),
-    })
-      .then((r) => r.json())
-      .catch(() => {});
   },
 
   signIn: async (email, password) => {
