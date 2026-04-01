@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 import { AppState, Platform, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ScreenCapture from 'screen-capture';
@@ -121,6 +122,12 @@ export default function HomeScreen() {
             <Text style={styles.rowSub}>
               {overlayGranted ? 'Tap to scan any conversation' : 'Requires overlay permission'}
             </Text>
+            <View style={styles.rowHint}>
+              <Ionicons name="information-circle-outline" size={14} color={Colors.accentBlue} style={{ marginTop: 1 }} />
+              <Text style={styles.rowHintText}>
+                When prompted, choose <Text style={styles.rowHintBold}>Share whole screen</Text>
+              </Text>
+            </View>
           </View>
           <Switch
             value={bubbleEnabled}
@@ -221,6 +228,21 @@ const styles = StyleSheet.create({
   rowSub: {
     ...Typography.caption,
     color: Colors.textSecondary,
+  },
+  rowHint: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 4,
+    marginTop: 2,
+  },
+  rowHintText: {
+    ...Typography.caption,
+    color: Colors.textDisabled,
+    flex: 1,
+  },
+  rowHintBold: {
+    color: Colors.textSecondary,
+    fontWeight: '600',
   },
   toneRow: {
     flexDirection: 'row',

@@ -70,9 +70,18 @@ const html = (email: string) => `<!DOCTYPE html>
             <p style="color:#8ABAFF;font-size:13px;font-weight:600;margin:0 0 4px;">
               <span style="color:#4F8EF7;margin-right:5px;">&#9733;</span>Pro tip
             </p>
-            <p style="color:#8888AA;font-size:13px;line-height:1.55;margin:0;">
-              Scroll up in your chat to load older messages, then tap <strong style="color:#C8C8E8;">Scan more</strong> — ReplyGen builds up context from multiple screenshots for smarter replies.
-            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+              <tr>
+                <td style="width:20px;vertical-align:top;padding-top:1px;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4F8EF7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                  </svg>
+                </td>
+                <td style="color:#8888AA;font-size:13px;line-height:1.55;">
+                  When Android asks how to share your screen, choose <strong style="color:#C8C8E8;">Share whole screen</strong> — it gives ReplyGen the full conversation for smarter replies.
+                </td>
+              </tr>
+            </table>
           </div>
         </td></tr>
 

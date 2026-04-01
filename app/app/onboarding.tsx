@@ -168,6 +168,16 @@ export default function OnboardingScreen() {
               </View>
             )}
 
+            {/* Share whole screen tip — Android only */}
+            {p.id === 'permission' && (
+              <View style={styles.tipBox}>
+                <Ionicons name="information-circle-outline" size={18} color={Colors.accentBlue} style={{ marginTop: 1 }} />
+                <Text style={styles.tipText}>
+                  When Android asks how to share, choose <Text style={styles.tipBold}>Share whole screen</Text> — it gives ReplyGen the full conversation context.
+                </Text>
+              </View>
+            )}
+
             {/* Permission step — Android only */}
             {p.id === 'permission' && (
               <View style={styles.permissionBox}>
@@ -452,6 +462,28 @@ const styles = StyleSheet.create({
   dotActive: {
     backgroundColor: Colors.accentBlue,
     width: 20,
+  },
+
+  // ── Tip box ───────────────────────────────────────────────────────────────
+  tipBox: {
+    alignSelf: 'stretch',
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    backgroundColor: 'rgba(79,142,247,0.08)',
+    borderRadius: Radius.md,
+    borderWidth: 1,
+    borderColor: 'rgba(79,142,247,0.25)',
+    padding: Spacing.md,
+  },
+  tipText: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+  },
+  tipBold: {
+    color: Colors.textPrimary,
+    fontWeight: '600',
   },
 
   // ── CTA ───────────────────────────────────────────────────────────────────
