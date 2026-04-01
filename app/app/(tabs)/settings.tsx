@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useUsageCount } from '../../src/hooks/useUsageCount';
 import { useAuthStore } from '../../src/store/useAuthStore';
 import { Colors, Radius, Spacing, Typography } from '../../src/utils/theme';
+import { validatePassword } from '../../src/utils/validatePassword';
 
 export default function SettingsScreen() {
   const { session, signOut, changePassword, deleteAccount } = useAuthStore();
@@ -24,6 +26,8 @@ export default function SettingsScreen() {
   const [pwExpanded, setPwExpanded] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
   const [pwError, setPwError] = useState('');
   const [pwSuccess, setPwSuccess] = useState(false);
@@ -31,8 +35,9 @@ export default function SettingsScreen() {
   async function handleChangePassword() {
     setPwError('');
     setPwSuccess(false);
-    if (newPassword.length < 6) {
-      setPwError('Password must be at least 6 characters.');
+    const { valid, message } = validatePassword(newPassword);
+    if (!valid) {
+      setPwError(message);
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -83,6 +88,8 @@ export default function SettingsScreen() {
     setPwSuccess(false);
     setNewPassword('');
     setConfirmPassword('');
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
   }
 
   return (
@@ -144,24 +151,34 @@ export default function SettingsScreen() {
 
               {pwExpanded && (
                 <View style={styles.pwForm}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="New password"
-                    placeholderTextColor={Colors.textDisabled}
-                    secureTextEntry
-                    value={newPassword}
-                    onChangeText={setNewPassword}
-                    autoCapitalize="none"
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Confirm new password"
-                    placeholderTextColor={Colors.textDisabled}
-                    secureTextEntry
-                    value={confirmPassword}
-                    onChangeText={setConfirmPassword}
-                    autoCapitalize="none"
-                  />
+                  <View style={styles.passwordRow}>
+                    <TextInput
+                      style={styles.passwordInput}
+                      placeholder="New password"
+                      placeholderTextColor={Colors.textDisabled}
+                      secureTextEntry={!showNewPassword}
+                      value={newPassword}
+                      onChangeText={setNewPassword}
+                      autoCapitalize="none"
+                    />
+                    <TouchableOpacity style={styles.eyeButton} onPress={() => setShowNewPassword(v => !v)} activeOpacity={0.7}>
+                      <Ionicons name={showNewPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={Colors.textSecondary} />
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.passwordRow}>
+                    <TextInput
+                      style={styles.passwordInput}
+                      placeholder="Confirm new password"
+                      placeholderTextColor={Colors.textDisabled}
+                      secureTextEntry={!showConfirmPassword}
+                      value={confirmPassword}
+                      onChangeText={setConfirmPassword}
+                      autoCapitalize="none"
+                    />
+                    <TouchableOpacity style={styles.eyeButton} onPress={() => setShowConfirmPassword(v => !v)} activeOpacity={0.7}>
+                      <Ionicons name={showConfirmPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={Colors.textSecondary} />
+                    </TouchableOpacity>
+                  </View>
                   {pwError ? <Text style={styles.pwError}>{pwError}</Text> : null}
                   {pwSuccess ? (
                     <View style={styles.pwSuccessBanner}>
@@ -269,6 +286,24 @@ const styles = StyleSheet.create({
   pwForm: {
     paddingBottom: Spacing.lg,
     gap: Spacing.sm,
+  },
+  passwordRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    ...Typography.body,
+    color: Colors.textPrimary,
+  },
+  eyeButton: {
+    padding: Spacing.sm,
   },
   input: {
     backgroundColor: Colors.background,

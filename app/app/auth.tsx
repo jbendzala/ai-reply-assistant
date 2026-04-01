@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../src/store/useAuthStore';
 import { Colors, Radius, Spacing, Typography } from '../src/utils/theme';
+import { validatePassword } from '../src/utils/validatePassword';
 
 export default function AuthScreen() {
   const [mode, setMode] = useState<'signIn' | 'signUp'>('signIn');
@@ -34,6 +35,13 @@ export default function AuthScreen() {
     if (!email.trim() || !password.trim()) {
       setLocalError('Email and password are required.');
       return;
+    }
+    if (mode === 'signUp') {
+      const { valid, message } = validatePassword(password);
+      if (!valid) {
+        setLocalError(message);
+        return;
+      }
     }
     setIsSubmitting(true);
     try {

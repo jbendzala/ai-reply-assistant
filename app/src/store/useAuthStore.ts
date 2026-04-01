@@ -182,8 +182,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     });
     if (error) throw error;
     // Supabase returns session=null when email confirmation is required.
-    // Welcome email is sent after the user clicks the confirmation link.
+    // When the email is already registered, identities is an empty array.
     if (!data.session) {
+      if (data.user?.identities?.length === 0) {
+        throw new Error('An account with this email already exists. Please sign in instead.');
+      }
       set({ pendingVerificationEmail: email });
       return;
     }
