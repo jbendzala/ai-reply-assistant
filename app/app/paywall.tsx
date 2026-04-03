@@ -16,9 +16,8 @@ import { Colors, Radius, Spacing, Typography } from '../src/utils/theme';
 
 const FEATURES = [
   'Unlimited AI scans — no monthly cap',
-  'All 5 reply tones (Casual, Witty, Flirty & more)',
   'Priority AI responses',
-  'Support indie development',
+  'Cancel anytime, no commitment',
 ];
 
 export default function PaywallScreen() {

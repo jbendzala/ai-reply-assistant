@@ -26,13 +26,21 @@ export const useProStore = create<ProState>((set) => ({
     Purchases.configure({ apiKey });
   },
 
-  syncProStatus: () => {
+  syncProStatus: async () => {
     const session = useAuthStore.getState().session;
-    const isPro = session?.user?.app_metadata?.is_pro === true;
-    set({ isPro });
-    // Log in to RevenueCat with the Supabase user ID so the webhook can match them
-    if (session?.user?.id) {
-      Purchases.logIn(session.user.id).catch(() => {});
+    if (!session?.user?.id) {
+      set({ isPro: false });
+      return;
+    }
+    try {
+      // Log in to RC with the Supabase user ID so the webhook can match them
+      await Purchases.logIn(session.user.id);
+      // Check entitlement directly from RC — most reliable source of truth for UI
+      const customerInfo = await Purchases.getCustomerInfo();
+      set({ isPro: !!customerInfo.entitlements.active['pro'] });
+    } catch {
+      // Fall back to app_metadata if RC is unavailable
+      set({ isPro: session?.user?.app_metadata?.is_pro === true });
     }
   },
 
@@ -43,12 +51,19 @@ export const useProStore = create<ProState>((set) => ({
       const monthly = offerings.current?.monthly;
       if (!monthly) throw new Error('No subscription offering available.');
 
-      await Purchases.purchaseStoreProduct(monthly.product);
+      const { customerInfo } = await Purchases.purchaseStoreProduct(monthly.product);
 
-      // Refresh session so app_metadata.is_pro is updated after webhook fires
+      // Optimistically set isPro from RC customer info immediately
+      const hasEntitlement = !!customerInfo.entitlements.active['pro'];
+      set({ isPro: hasEntitlement });
+
+      // Also refresh session after webhook fires to sync app_metadata
+      await new Promise((resolve) => setTimeout(resolve, 3000));
       await supabase.auth.refreshSession();
       const session = useAuthStore.getState().session;
-      set({ isPro: session?.user?.app_metadata?.is_pro === true });
+      if (session?.user?.app_metadata?.is_pro === true) {
+        set({ isPro: true });
+      }
     } catch (e: any) {
       if (!e?.userCancelled) {
         set({ error: e?.message ?? 'Purchase failed. Please try again.' });
