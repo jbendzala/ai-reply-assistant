@@ -1,3 +1,4 @@
+import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -12,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthStore } from '../src/store/useAuthStore';
 import { Colors, Radius, Spacing, Typography } from '../src/utils/theme';
+import { validatePassword } from '../src/utils/validatePassword';
 
 export default function ResetPasswordScreen() {
   const { changePassword, clearPasswordRecovery } = useAuthStore();
@@ -20,11 +22,14 @@ export default function ResetPasswordScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   async function handleSave() {
     setError('');
-    if (newPassword.length < 6) {
-      setError('Password must be at least 6 characters.');
+    const { valid, message } = validatePassword(newPassword);
+    if (!valid) {
+      setError(message);
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -56,24 +61,34 @@ export default function ResetPasswordScreen() {
           </View>
 
           <View style={styles.form}>
-            <TextInput
-              style={styles.input}
-              placeholder="New password"
-              placeholderTextColor={Colors.textDisabled}
-              secureTextEntry
-              value={newPassword}
-              onChangeText={setNewPassword}
-              autoCapitalize="none"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm new password"
-              placeholderTextColor={Colors.textDisabled}
-              secureTextEntry
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              autoCapitalize="none"
-            />
+            <View style={styles.passwordRow}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="New password"
+                placeholderTextColor={Colors.textDisabled}
+                secureTextEntry={!showNew}
+                value={newPassword}
+                onChangeText={setNewPassword}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity style={styles.eyeButton} onPress={() => setShowNew(v => !v)} activeOpacity={0.7}>
+                <Ionicons name={showNew ? 'eye-off-outline' : 'eye-outline'} size={20} color={Colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.passwordRow}>
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="Confirm new password"
+                placeholderTextColor={Colors.textDisabled}
+                secureTextEntry={!showConfirm}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity style={styles.eyeButton} onPress={() => setShowConfirm(v => !v)} activeOpacity={0.7}>
+                <Ionicons name={showConfirm ? 'eye-off-outline' : 'eye-outline'} size={20} color={Colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
 
             {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
@@ -138,6 +153,23 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     ...Typography.body,
     color: Colors.textPrimary,
+  },
+  passwordRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Radius.md,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: Spacing.lg,
+    ...Typography.body,
+    color: Colors.textPrimary,
+  },
+  eyeButton: {
+    padding: Spacing.lg,
   },
   errorText: {
     ...Typography.caption,

@@ -480,6 +480,7 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     color: Colors.textSecondary,
     lineHeight: 20,
+    flex: 1,
   },
   tipBold: {
     color: Colors.textPrimary,
