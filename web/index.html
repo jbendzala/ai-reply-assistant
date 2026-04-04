@@ -362,7 +362,14 @@
     @media (max-width: 600px) {
       .hero { padding: 72px 24px 64px; }
       section { padding: 72px 0; }
-      .phone { width: 220px; }
+      .phone {
+        width: min(220px, 72vw);
+      }
+      .chat-row.hide-mobile { display: none; }
+      .bubble-msg { font-size: 11px; padding: 6px 10px; }
+      .reply-card { margin-top: 8px; padding: 8px; }
+      .reply-option { padding: 5px 8px; font-size: 10px; }
+      .floating-bubble { width: 34px; height: 34px; bottom: 60px; right: 12px; }
     }
   </style>
 </head>
@@ -400,10 +407,10 @@
     <div class="phone">
       <div class="phone-screen">
         <div class="phone-app-name">WhatsApp</div>
-        <div class="chat-row them">
+        <div class="chat-row them hide-mobile">
           <div class="bubble-msg">Hey! Are you free tonight? 😊</div>
         </div>
-        <div class="chat-row me">
+        <div class="chat-row me hide-mobile">
           <div class="bubble-msg">Just finished work, what's up?</div>
         </div>
         <div class="chat-row them">
