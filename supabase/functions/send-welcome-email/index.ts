@@ -1,14 +1,14 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const RESEND_API_URL = "https://api.resend.com/emails";
-const FROM = "ReplyGen <hello@replygen.co>";
+const FROM = "AirReply <hello@airreply.app>";
 
 const html = (email: string) => `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to ReplyGen</title>
+  <title>Welcome to AirReply</title>
 </head>
 <body style="margin:0;padding:0;background:#0A0A0F;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#0A0A0F;padding:48px 16px;">
@@ -18,9 +18,9 @@ const html = (email: string) => `<!DOCTYPE html>
         <!-- Header -->
         <tr><td style="padding:40px 40px 32px;text-align:center;">
           <div style="display:inline-block;margin-bottom:24px;">
-            <img src="https://jcujviegtkwqbybyrrqt.supabase.co/storage/v1/object/public/assets/ReplyGen_logo1.png" alt="ReplyGen" width="72" height="72" style="display:block;border:0;border-radius:16px;" />
+            <img src="https://jcujviegtkwqbybyrrqt.supabase.co/storage/v1/object/public/assets/AirReply_logo1.png" alt="AirReply" width="72" height="72" style="display:block;border:0;border-radius:16px;" />
           </div>
-          <h1 style="color:#F0F0FF;font-size:24px;font-weight:700;margin:0 0 10px;letter-spacing:-0.3px;">Welcome to ReplyGen</h1>
+          <h1 style="color:#F0F0FF;font-size:24px;font-weight:700;margin:0 0 10px;letter-spacing:-0.3px;">Welcome to AirReply</h1>
           <p style="color:#8888AA;font-size:15px;line-height:1.65;margin:0;">
             Smart replies, instantly — right from a floating bubble on your screen.
           </p>
@@ -78,7 +78,7 @@ const html = (email: string) => `<!DOCTYPE html>
                   </svg>
                 </td>
                 <td style="color:#8888AA;font-size:13px;line-height:1.55;">
-                  When Android asks how to share your screen, choose <strong style="color:#C8C8E8;">Share whole screen</strong> — it gives ReplyGen the full conversation for smarter replies.
+                  When Android asks how to share your screen, choose <strong style="color:#C8C8E8;">Share whole screen</strong> — it gives AirReply the full conversation for smarter replies.
                 </td>
               </tr>
             </table>
@@ -93,7 +93,7 @@ const html = (email: string) => `<!DOCTYPE html>
           <p style="color:#55556A;font-size:13px;line-height:1.6;margin:0 0 6px;">
             Questions or feedback? Reply to this email — we read every one.
           </p>
-          <p style="color:#3A3A50;font-size:12px;margin:0;">© 2026 ReplyGen · You're receiving this because you signed up at replygen.co</p>
+          <p style="color:#3A3A50;font-size:12px;margin:0;">© 2026 AirReply · You're receiving this because you signed up at airreply.app</p>
         </td></tr>
 
       </table>
@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: FROM,
         to: [email],
-        subject: "Welcome to ReplyGen 👋",
+        subject: "Welcome to AirReply 👋",
         html: html(email),
       }),
     });

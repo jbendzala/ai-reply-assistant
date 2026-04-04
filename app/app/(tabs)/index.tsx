@@ -110,7 +110,7 @@ export default function HomeScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>ReplyGen</Text>
+          <Text style={styles.title}>AirReply</Text>
           <Text style={styles.subtitle}>Your smart reply companion</Text>
         </View>
 

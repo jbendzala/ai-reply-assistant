@@ -133,7 +133,7 @@ export default function AuthScreen() {
         >
           {/* Header */}
           <View style={styles.header}>
-            <Text style={styles.title}>ReplyGen</Text>
+            <Text style={styles.title}>AirReply</Text>
             <Text style={styles.subtitle}>
               {mode === 'signIn' ? 'Sign in to your account' : 'Create an account'}
             </Text>

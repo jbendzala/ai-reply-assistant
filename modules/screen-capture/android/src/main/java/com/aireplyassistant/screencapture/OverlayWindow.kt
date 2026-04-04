@@ -48,7 +48,7 @@ class OverlayWindow(
     }
 
     val title = TextView(context).apply {
-      text = "ReplyGen"
+      text = "AirReply"
       textSize = 14f
       setTextColor(Color.parseColor("#8888AA"))
       layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)

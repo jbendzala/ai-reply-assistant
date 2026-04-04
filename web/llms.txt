@@ -1,10 +1,10 @@
-# ReplyGen
+# AirReply
 
-ReplyGen is an AI-powered reply assistant app for Android.
+AirReply is an AI-powered reply assistant app for Android.
 
 ## What it does
 
-ReplyGen displays a floating bubble over any Android messaging app (WhatsApp, SMS, Instagram, Telegram, etc.). When the user taps the bubble, it scans the visible conversation using OCR, identifies who said what (Me vs Them), and generates three contextually appropriate reply suggestions using AI. The user copies a reply and pastes it directly into their messaging app — without ever leaving it.
+AirReply displays a floating bubble over any Android messaging app (WhatsApp, SMS, Instagram, Telegram, etc.). When the user taps the bubble, it scans the visible conversation using OCR, identifies who said what (Me vs Them), and generates three contextually appropriate reply suggestions using AI. The user copies a reply and pastes it directly into their messaging app — without ever leaving it.
 
 ## Key features
 
@@ -29,7 +29,7 @@ ReplyGen displays a floating bubble over any Android messaging app (WhatsApp, SM
 
 ## Links
 
-- Website: https://replygen.co
+- Website: https://airreply.app
 - Google Play: https://play.google.com/store/apps/details?id=com.replygen.app
-- Privacy Policy: https://replygen.co/privacy.html
-- Contact: hello@replygen.co
+- Privacy Policy: https://airreply.app/privacy.html
+- Contact: hello@airreply.app

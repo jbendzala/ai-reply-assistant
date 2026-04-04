@@ -27,7 +27,7 @@ const ALL_PAGES = [
   {
     id: 'welcome',
     ionIcon: null,
-    title: 'ReplyGen',
+    title: 'AirReply',
     subtitle:
       'A floating bubble that lives on your screen, ready to suggest the perfect reply — instantly.',
   },
@@ -173,7 +173,7 @@ export default function OnboardingScreen() {
               <View style={styles.tipBox}>
                 <Ionicons name="information-circle-outline" size={18} color={Colors.accentBlue} style={{ marginTop: 1 }} />
                 <Text style={styles.tipText}>
-                  When Android asks how to share, choose <Text style={styles.tipBold}>Share whole screen</Text> — it gives ReplyGen the full conversation context.
+                  When Android asks how to share, choose <Text style={styles.tipBold}>Share whole screen</Text> — it gives AirReply the full conversation context.
                 </Text>
               </View>
             )}

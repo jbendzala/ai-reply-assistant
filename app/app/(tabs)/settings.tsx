@@ -111,7 +111,7 @@ export default function SettingsScreen() {
           <View style={styles.proBadgeCard}>
             <Ionicons name="flash" size={18} color={Colors.accentBlue} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.proTitle}>ReplyGen Pro</Text>
+              <Text style={styles.proTitle}>AirReply Pro</Text>
               <Text style={styles.proSub}>Unlimited scans — active</Text>
             </View>
           </View>

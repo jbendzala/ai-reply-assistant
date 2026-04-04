@@ -59,7 +59,7 @@ export default function PaywallScreen() {
         </View>
 
         {/* Heading */}
-        <Text style={styles.title}>ReplyGen Pro</Text>
+        <Text style={styles.title}>AirReply Pro</Text>
         <Text style={styles.subtitle}>Unlimited AI replies, every month.</Text>
 
         {/* Feature list */}

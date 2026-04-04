@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://replygen.co/sitemap.xml
+Sitemap: https://airreply.app/sitemap.xml
