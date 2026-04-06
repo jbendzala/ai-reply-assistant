@@ -18,7 +18,7 @@ const html = (email: string) => `<!DOCTYPE html>
         <!-- Header -->
         <tr><td style="padding:40px 40px 32px;text-align:center;">
           <div style="display:inline-block;margin-bottom:24px;">
-            <img src="https://raw.githubusercontent.com/jbendzala/ai-reply-assistant/main/app/assets/AirReply_logo.png" alt="AirReply" width="72" height="72" style="display:block;border:0;" />
+            <img src="https://jcujviegtkwqbybyrrqt.supabase.co/storage/v1/object/public/assets/AirReply_logo_dark.png" alt="AirReply" width="72" height="72" style="display:block;border:0;" />
           </div>
           <h1 style="color:#F0F0FF;font-size:24px;font-weight:700;margin:0 0 10px;letter-spacing:-0.3px;">Welcome to AirReply</h1>
           <p style="color:#8888AA;font-size:15px;line-height:1.65;margin:0;">
