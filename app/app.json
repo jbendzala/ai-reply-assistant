@@ -2,7 +2,7 @@
   "expo": {
     "name": "AirReply",
     "slug": "ai-reply-assistant",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -18,7 +18,7 @@
     },
     "android": {
       "package": "com.replygen.app",
-      "versionCode": 8,
+      "versionCode": 9,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0A0A0F"
@@ -38,7 +38,8 @@
     },
     "plugins": [
       "expo-router",
-      "../modules/screen-capture/plugin/withScreenCapture"
+      "../modules/screen-capture/plugin/withScreenCapture",
+      "./plugins/withAdaptiveIconInset"
     ],
     "scheme": "replygen",
     "extra": {
