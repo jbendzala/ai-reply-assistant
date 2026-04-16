@@ -37,7 +37,7 @@ export const useProStore = create<ProState>((set) => ({
       await Purchases.logIn(session.user.id);
       // Check entitlement directly from RC — most reliable source of truth for UI
       const customerInfo = await Purchases.getCustomerInfo();
-      set({ isPro: !!customerInfo.entitlements.active['pro'] });
+      set({ isPro: !!customerInfo.entitlements.active['ReplyGen Pro'] });
     } catch {
       // Fall back to app_metadata if RC is unavailable
       set({ isPro: session?.user?.app_metadata?.is_pro === true });
@@ -54,7 +54,7 @@ export const useProStore = create<ProState>((set) => ({
       const { customerInfo } = await Purchases.purchaseStoreProduct(monthly.product);
 
       // Optimistically set isPro from RC customer info immediately
-      const hasEntitlement = !!customerInfo.entitlements.active['pro'];
+      const hasEntitlement = !!customerInfo.entitlements.active['ReplyGen Pro'];
       set({ isPro: hasEntitlement });
 
       // Also refresh session after webhook fires to sync app_metadata
@@ -77,7 +77,7 @@ export const useProStore = create<ProState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const customerInfo = await Purchases.restorePurchases();
-      const hasEntitlement = !!customerInfo.entitlements.active['pro'];
+      const hasEntitlement = !!customerInfo.entitlements.active['ReplyGen Pro'];
       if (hasEntitlement) {
         await supabase.auth.refreshSession();
         const session = useAuthStore.getState().session;
