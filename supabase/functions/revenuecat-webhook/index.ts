@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
     // ── Verify RevenueCat shared secret ──────────────────────────────────────
     const webhookSecret = Deno.env.get("REVENUECAT_WEBHOOK_SECRET");
     const authHeader = req.headers.get("Authorization");
-    if (!webhookSecret || authHeader !== `Bearer ${webhookSecret}`) {
+    if (!webhookSecret || (authHeader !== `Bearer ${webhookSecret}` && authHeader !== webhookSecret)) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
