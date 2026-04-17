@@ -47,6 +47,12 @@ export const useProStore = create<ProState>((set) => ({
   purchasePro: async () => {
     set({ isLoading: true, error: null });
     try {
+      // Ensure RC is logged in with Supabase user ID before purchasing
+      const session = useAuthStore.getState().session;
+      if (session?.user?.id) {
+        await Purchases.logIn(session.user.id);
+      }
+
       const offerings = await Purchases.getOfferings();
       const monthly = offerings.current?.monthly;
       if (!monthly) throw new Error('No subscription offering available.');
@@ -60,8 +66,8 @@ export const useProStore = create<ProState>((set) => ({
       // Also refresh session after webhook fires to sync app_metadata
       await new Promise((resolve) => setTimeout(resolve, 3000));
       await supabase.auth.refreshSession();
-      const session = useAuthStore.getState().session;
-      if (session?.user?.app_metadata?.is_pro === true) {
+      const refreshedSession = useAuthStore.getState().session;
+      if (refreshedSession?.user?.app_metadata?.is_pro === true) {
         set({ isPro: true });
       }
     } catch (e: any) {
