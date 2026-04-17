@@ -84,11 +84,7 @@ export const useProStore = create<ProState>((set) => ({
     try {
       const customerInfo = await Purchases.restorePurchases();
       const hasEntitlement = !!customerInfo.entitlements.active['ReplyGen Pro'];
-      if (hasEntitlement) {
-        await supabase.auth.refreshSession();
-        const session = useAuthStore.getState().session;
-        set({ isPro: session?.user?.app_metadata?.is_pro === true });
-      }
+      set({ isPro: hasEntitlement });
       return { restored: hasEntitlement };
     } catch (e: any) {
       set({ error: e?.message ?? 'Restore failed. Please try again.' });
